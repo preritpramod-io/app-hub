@@ -8,12 +8,16 @@
   ],
   "rewrites": [
     {
-      "source": "/activities/defence/india/:match*",
-      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/:match*"
+      "source": "/activities/defence/india",
+      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india"
     },
     {
-      "source": "/trackers/:match*",
-      "destination": "https://app-trackers-funding.vercel.app/trackers/:match*"
+      "source": "/activities/defence/india/",
+      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/"
+    },
+    {
+      "source": "/activities/defence/india/(.*)",
+      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/$1"
     }
   ]
 }
