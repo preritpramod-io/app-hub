@@ -1,0 +1,19 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/activities/defence/india/",
+      "statusCode": 302
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/activities/defence/india/:match*",
+      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/:match*"
+    },
+    {
+      "source": "/trackers/:match*",
+      "destination": "https://app-trackers-funding.vercel.app/trackers/:match*"
+    }
+  ]
+}
