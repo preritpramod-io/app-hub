@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Orbital Mechanics, From the Ground Up</title>
+<style>
+  :root{
+    --bg:#06080f;
+    --panel:rgba(12,16,26,0.82);
+    --panel-solid:#0c1019;
+    --ink:#e8edf6;
+    --muted:#8a97ad;
+    --line:#1d2636;
+    --accent:#5ad1ff;
+    --accent2:#ffb454;
+    --good:#79e08a;
+    --warn:#ff6b6b;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  #app{position:fixed;inset:0}
+  canvas{display:block;touch-action:none}
+
+  /* top bar */
+  #topbar{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:10px;
+    padding:10px 12px;background:linear-gradient(180deg,rgba(6,8,15,0.92),rgba(6,8,15,0));pointer-events:none}
+  #topbar .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.22em;color:var(--accent);text-transform:uppercase}
+  #topbar h1{font-size:14px;margin:0;font-weight:600;letter-spacing:0.01em}
+  #topbar .mtitle{color:var(--muted);font-weight:400}
+  #counter{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);pointer-events:none}
+
+  /* data rail */
+  #rail{position:fixed;top:54px;left:12px;z-index:15;width:188px;max-width:46vw;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px);
+    padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.5;pointer-events:none}
+  #rail .rk{color:var(--muted)}
+  #rail .rv{color:var(--ink);float:right}
+  #rail .row{clear:both;border-bottom:1px dashed rgba(255,255,255,0.05);padding:2px 0}
+  #rail .row:last-child{border-bottom:none}
+  #rail .rhdr{color:var(--accent);letter-spacing:0.12em;font-size:9px;text-transform:uppercase;margin-bottom:4px}
+
+  /* bottom sheet */
+  #sheet{position:fixed;left:0;right:0;bottom:0;z-index:18;background:var(--panel);
+    border-top:1px solid var(--line);backdrop-filter:blur(10px);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:62vh;display:flex;flex-direction:column}
+  #sheet.collapsed{transform:translateY(calc(100% - 52px))}
+  #grip{height:52px;display:flex;align-items:center;gap:10px;padding:0 14px;cursor:pointer;flex:0 0 auto}
+  #grip .bar{width:34px;height:4px;border-radius:2px;background:#2a3650}
+  #grip .glabel{font-size:12px;color:var(--muted)}
+  #grip .gnum{font-family:var(--mono);font-size:11px;color:var(--accent);margin-left:auto}
+  #sheetbody{overflow-y:auto;padding:2px 16px 18px;-webkit-overflow-scrolling:touch}
+
+  .explain{font-size:13.5px;line-height:1.62;color:#cdd6e6;margin:6px 0 14px}
+  .explain b{color:#fff;font-weight:600}
+  .explain .term{color:var(--accent);font-weight:600}
+  .explain .num{font-family:var(--mono);color:var(--accent2)}
+
+  .controls{display:flex;flex-direction:column;gap:13px;margin-bottom:14px}
+  .ctl label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);
+    font-family:var(--mono);margin-bottom:5px;letter-spacing:0.02em}
+  .ctl label .val{color:var(--accent)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:26px;background:transparent;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;background:#26324a;border-radius:3px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--accent);margin-top:-9px;box-shadow:0 0 0 4px rgba(90,209,255,0.16)}
+  input[type=range]::-moz-range-track{height:3px;background:#26324a;border-radius:3px}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--accent)}
+
+  .toggles{display:flex;flex-wrap:wrap;gap:8px}
+  .toggle{font-family:var(--mono);font-size:11px;padding:7px 11px;border-radius:8px;border:1px solid var(--line);
+    background:#101725;color:var(--muted);cursor:pointer;user-select:none}
+  .toggle.on{background:rgba(90,209,255,0.14);border-color:var(--accent);color:var(--accent)}
+  .btn{font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:8px;border:1px solid var(--accent);
+    background:rgba(90,209,255,0.12);color:var(--accent);cursor:pointer}
+
+  .nav{display:flex;gap:8px;align-items:center;padding-top:6px;border-top:1px solid var(--line)}
+  .nav .navbtn{flex:1;text-align:center;font-family:var(--mono);font-size:12px;padding:11px;border-radius:9px;
+    border:1px solid var(--line);background:#101725;color:var(--ink);cursor:pointer}
+  .nav .navbtn:active{background:#16203200}
+  .nav .navbtn[disabled]{opacity:0.32;cursor:default}
+  .nav .navbtn.primary{background:rgba(90,209,255,0.16);border-color:var(--accent);color:var(--accent)}
+
+  .moduledots{display:flex;gap:5px;justify-content:center;margin:2px 0 12px;flex-wrap:wrap}
+  .dot{width:9px;height:9px;border-radius:50%;background:#222d40;cursor:pointer}
+  .dot.active{background:var(--accent);transform:scale(1.2)}
+
+  #err{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
+    background:#06080f;color:#ff8a8a;font-family:var(--mono);font-size:13px;padding:24px;text-align:center}
+  .hint{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:5;color:var(--muted);
+    font-family:var(--mono);font-size:11px;letter-spacing:0.04em;pointer-events:none;opacity:0;transition:opacity .5s}
+  .hint.show{opacity:0.7}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="topbar">
+  <div>
+    <div class="eyebrow">Orbital Mechanics</div>
+    <h1><span id="mtitle" class="mtitle">Loading</span></h1>
+  </div>
+  <div id="counter"></div>
+</div>
+
+<div id="rail"></div>
+<div class="hint" id="hint">drag to orbit &middot; pinch to zoom</div>
+
+<div id="sheet">
+  <div id="grip">
+    <div class="bar"></div>
+    <div class="glabel">Lesson &amp; controls</div>
+    <div class="gnum" id="gripnum"></div>
+  </div>
+  <div id="sheetbody">
+    <div class="moduledots" id="dots"></div>
+    <div class="explain" id="explain"></div>
+    <div class="controls" id="controls"></div>
+    <div class="nav">
+      <button class="navbtn" id="prev">&larr; Back</button>
+      <button class="navbtn primary" id="next">Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div id="err"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+(function(){
+
+const EARTH_KM = 6371;          // 1 scene unit = 1 Earth radius
+const VC_SURF  = 7.905;         // km/s circular speed at surface
+function altU(km){ return km/EARTH_KM; }          // altitude km -> units
+function rU(km){ return 1 + altU(km); }            // center distance for altitude
+
+let scene, camera, renderer, world, sun, hintTimer;
+const cam = { r: 3.0, theta: 0.7, phi: 1.1, target: new THREE.Vector3(0,0,0), rMin:1.25, rMax:140 };
+let active = null, clock = 0, lastT = 0;
+
+/* ---------- helpers ---------- */
+function disposeGroup(g){
+  g.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map)m.map.dispose(); m.dispose(); }); }
+  });
+  while(g.children.length) g.remove(g.children[0]);
+}
+
+function earthTexture(){
+  const c=document.createElement('canvas'); c.width=1024; c.height=512;
+  const x=c.getContext('2d');
+  const grd=x.createLinearGradient(0,0,0,512);
+  grd.addColorStop(0,'#0b2a4a'); grd.addColorStop(0.5,'#0e3a63'); grd.addColorStop(1,'#0b2a4a');
+  x.fillStyle=grd; x.fillRect(0,0,1024,512);
+  // deterministic "continents"
+  const blobs=[[180,180,90,55],[300,150,70,45],[260,300,120,70],[560,160,110,80],[640,300,90,60],
+               [780,210,70,50],[860,330,100,55],[120,330,60,40],[460,360,80,45]];
+  x.fillStyle='#1f6b46';
+  blobs.forEach(b=>{ x.beginPath(); x.ellipse(b[0],b[1],b[2],b[3],0,0,Math.PI*2); x.fill(); });
+  x.fillStyle='rgba(120,90,40,0.25)';
+  blobs.forEach(b=>{ x.beginPath(); x.ellipse(b[0],b[1],b[2]*0.6,b[3]*0.6,0,0,Math.PI*2); x.fill(); });
+  const t=new THREE.CanvasTexture(c); t.anisotropy=4; return t;
+}
+
+function makeEarth(opt){
+  opt=opt||{};
+  const g=new THREE.Group();
+  const geo=new THREE.SphereGeometry(1,64,48);
+  const mat=new THREE.MeshPhongMaterial({map:earthTexture(),shininess:8,specular:0x223344});
+  const mesh=new THREE.Mesh(geo,mat);
+  if(opt.oblate) mesh.scale.set(1,0.9966,1);
+  g.add(mesh); g.userData.mesh=mesh;
+  // soft atmosphere glow
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(1.03,48,32),
+    new THREE.MeshBasicMaterial({color:0x4aa3ff,transparent:true,opacity:0.10,side:THREE.BackSide}));
+  g.add(glow);
+  return g;
+}
+
+function graticule(R,color,step){
+  step=step||30; color=color||0x2b6da3;
+  const grp=new THREE.Group();
+  const matN=new THREE.LineBasicMaterial({color:color,transparent:true,opacity:0.45});
+  const matEq=new THREE.LineBasicMaterial({color:0x6fe0ff,transparent:true,opacity:0.9});
+  const matPm=new THREE.LineBasicMaterial({color:0xffb454,transparent:true,opacity:0.85});
+  // parallels (latitudes) in planes parallel to XZ, Y is spin axis
+  for(let lat=-60;lat<=60;lat+=step){
+    const r=R*Math.cos(lat*Math.PI/180), y=R*Math.sin(lat*Math.PI/180);
+    const pts=[]; for(let a=0;a<=360;a+=4){const t=a*Math.PI/180; pts.push(new THREE.Vector3(r*Math.cos(t),y,r*Math.sin(t)));}
+    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lat===0?matEq:matN));
+  }
+  // meridians (longitudes), planes containing Y axis
+  for(let lon=0;lon<360;lon+=step){
+    const pts=[]; for(let a=-90;a<=90;a+=3){const t=a*Math.PI/180; const r=R*Math.cos(t);
+      pts.push(new THREE.Vector3(r*Math.cos(lon*Math.PI/180), R*Math.sin(t), r*Math.sin(lon*Math.PI/180)));}
+    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lon===0?matPm:matN));
+  }
+  return grp;
+}
+
+function ringPoints(R,n){const p=[];for(let i=0;i<=n;i++){const t=i/n*Math.PI*2;p.push(new THREE.Vector3(R*Math.cos(t),0,R*Math.sin(t)));}return p;}
+function circle(R,color,op){
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPoints(R,128)),
+    new THREE.LineBasicMaterial({color:color,transparent:true,opacity:op==null?0.9:op}));
+}
+function ellipseLine(a,e,color){
+  const p=[]; const pp=a*(1-e*e);
+  for(let i=0;i<=200;i++){const th=i/200*Math.PI*2; const r=pp/(1+e*Math.cos(th));
+    p.push(new THREE.Vector3(r*Math.cos(th),0,r*Math.sin(th)));}
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),
+    new THREE.LineBasicMaterial({color:color}));
+}
+
+function label(text,color){
+  const c=document.createElement('canvas'); c.width=256; c.height=64;
+  const x=c.getContext('2d'); x.font='600 30px -apple-system,Segoe UI,Roboto,sans-serif';
+  x.fillStyle=color||'#e8edf6'; x.textBaseline='middle'; x.textAlign='center';
+  x.shadowColor='rgba(0,0,0,0.9)'; x.shadowBlur=6; x.fillText(text,128,34);
+  const t=new THREE.CanvasTexture(c);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,depthWrite:false,transparent:true}));
+  s.renderOrder=999; s.scale.set(0.62,0.155,1); return s;
+}
+
+function arrow(dir,origin,len,color){
+  const d=dir.clone(); if(d.length()<1e-6)d.set(0,1,0); d.normalize();
+  return new THREE.ArrowHelper(d,origin,len,color,Math.min(0.18,len*0.3),Math.min(0.11,len*0.18));
+}
+function dot(R,color){return new THREE.Mesh(new THREE.SphereGeometry(R,16,12),new THREE.MeshBasicMaterial({color:color}));}
+
+function starfield(){
+  const n=1400,pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const r=200+Math.random()*300,u=Math.random()*2-1,t=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u);
+    pos[i*3]=r*s*Math.cos(t);pos[i*3+1]=r*u;pos[i*3+2]=r*s*Math.sin(t);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  return new THREE.Points(g,new THREE.PointsMaterial({color:0x9fb4d6,size:1.1,sizeAttenuation:false}));
+}
+
+/* ---------- rail (data readout) ---------- */
+function setRail(title,rows){
+  const el=document.getElementById('rail');
+  if(!rows||!rows.length){el.style.display='none';return;}
+  el.style.display='block';
+  let h='<div class="rhdr">'+title+'</div>';
+  rows.forEach(r=>{ h+='<div class="row"><span class="rk">'+r[0]+'</span><span class="rv" style="color:'+(r[2]||'#e8edf6')+'">'+r[1]+'</span></div>'; });
+  el.innerHTML=h;
+}
+
+/* ---------- UI builders ---------- */
+const C=document.getElementById('controls');
+function clearControls(){C.innerHTML='';}
+function slider(o){
+  const w=document.createElement('div');w.className='ctl';
+  const id='s'+Math.random().toString(36).slice(2,7);
+  w.innerHTML='<label for="'+id+'">'+o.label+'<span class="val" id="'+id+'v">'+o.fmt(o.value)+'</span></label>'+
+    '<input id="'+id+'" type="range" min="'+o.min+'" max="'+o.max+'" step="'+(o.step||1)+'" value="'+o.value+'">';
+  C.appendChild(w);
+  const inp=w.querySelector('input'),vv=w.querySelector('#'+id+'v');
+  inp.addEventListener('input',()=>{const v=parseFloat(inp.value);vv.textContent=o.fmt(v);o.on(v);});
+  return inp;
+}
+function toggleRow(items){
+  const w=document.createElement('div');w.className='toggles';
+  items.forEach(it=>{const b=document.createElement('div');b.className='toggle'+(it.on?' on':'');b.textContent=it.label;
+    b.addEventListener('click',()=>{it.on=!it.on;b.classList.toggle('on',it.on);it.cb(it.on);});w.appendChild(b);});
+  C.appendChild(w);
+}
+function button(lbl,cb){const b=document.createElement('div');b.className='btn';b.textContent=lbl;b.addEventListener('click',cb);C.appendChild(b);}
+
+/* ============================================================
+   MODULES
+   ============================================================ */
+const MODULES=[];
+
+/* 0 ---- Field & vocabulary ---- */
+MODULES.push({
+  title:'The field, and the words for it',
+  explain:`This whole subject has names. The physics of how bodies move under gravity is <span class="term">celestial mechanics</span>; the engineering of putting a spacecraft on a chosen path is <span class="term">orbital mechanics</span> or <span class="term">astrodynamics</span>. All of it runs on one idea from Newton: every mass pulls every other mass, and that pull is what bends a straight line into an orbit.
+  <br><br>A quick glossary so Shardul stops sounding like a different language. <span class="term">Orbit</span>: the closed path a body traces around another. <span class="term">Orbital plane</span>: the flat sheet that path lies in, always through the planet's centre. <span class="term">Inclination</span>: how tilted that sheet is versus the equator. <span class="term">Eccentricity</span>: how stretched the orbit is, 0 a circle. <span class="term">Apogee / perigee</span>: farthest and nearest points to Earth. <span class="term">Delta-v</span>: any change in velocity, the true currency of spaceflight; you pay it in propellant. <span class="term">Plane change</span>: rotating your orbital plane, which is brutally expensive. <span class="term">LEO / MEO / GEO</span>: low, medium, geostationary altitude bands. We will build every one of these into a picture you can move.`,
+  build(){
+    world.add(makeEarth({oblate:false}));
+    world.add(graticule(1.004));
+    const ax=new THREE.Group();
+    ax.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.5,0),new THREE.Vector3(0,1.6,0)]),
+      new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.25})));
+    const np=label('spin axis','#9fb4d6');np.position.set(0,1.75,0);ax.add(np);
+    world.add(ax);
+    cam.r=3.0;
+  },
+  update(dt){ world.children[0].rotation.y+=dt*0.12; world.children[1].rotation.y+=dt*0.12; }
+});
+
+/* 1 ---- Earth shape & atmosphere ---- */
+MODULES.push({
+  title:'The Earth: its shape, and the air around it',
+  explain:`Earth is not a perfect ball. It spins, so it bulges at the equator and flattens at the poles; the proper word is an <span class="term">oblate spheroid</span>. The radius is about <span class="num">6,371 km</span>, but the equator is roughly <span class="num">21 km</span> wider than the pole to pole distance. Small, yet it matters for precise orbits.
+  <br><br>Above the surface sits the <span class="term">atmosphere</span>, in layers. The <b>troposphere</b> (weather, to ~12 km), <b>stratosphere</b> (ozone, to ~50 km), <b>mesosphere</b> (to ~85 km), then the <b>thermosphere</b> (to ~600 km) and the wispy <b>exosphere</b> fading into space. The famous <span class="term">Kármán line</span> at <span class="num">100 km</span> is the convention for where "space" begins. Here is the catch: those layers are paper thin next to the planet. Real air all but vanishes within 1.5% of one Earth radius, which is exactly why low orbits skim so close to the surface. Use the exaggeration slider to make the shells visible, then drop it to 1 to feel the true thinness.`,
+  build(){
+    const e=makeEarth({oblate:true}); world.add(e);
+    world.add(graticule(1.004,0x2b6da3,30));
+    const shells=new THREE.Group(); world.add(shells); this.shells=shells;
+    this.exag=18; this.rebuild();
+    cam.r=2.6;
+  },
+  rebuild(){
+    disposeGroup(this.shells);
+    const defs=[[12,0x6fcaff],[50,0x4aa3ff],[85,0x8a7bff],[600,0xff8aa0]];
+    defs.forEach(d=>{ const R=1+altU(d[0])*this.exag;
+      this.shells.add(new THREE.Mesh(new THREE.SphereGeometry(R,48,32),
+        new THREE.MeshBasicMaterial({color:d[1],transparent:true,opacity:0.10,side:THREE.DoubleSide})));
+    });
+    // Karman line as a bright ring + label
+    const Rk=1+altU(100)*this.exag;
+    const k=circle(Rk,0xffffff,0.9); k.rotation.x=Math.PI/2; this.shells.add(k);
+    const kl=label('Karman line  100 km','#ffffff'); kl.position.set(0,Rk+0.04,0); this.shells.add(kl);
+    setRail('Atmosphere',[
+      ['Earth radius','6,371 km'],
+      ['Equator bulge','+21 km','#ffb454'],
+      ['Karman line','100 km','#6fe0ff'],
+      ['Exaggeration','x'+this.exag.toFixed(0),'#5ad1ff']
+    ]);
+  },
+  controls(){
+    slider({label:'Altitude exaggeration',value:18,min:1,max:40,step:1,fmt:v=>'x'+v,on:v=>{this.exag=v;this.rebuild();}});
+    toggleRow([{label:'Show oblate bulge',on:true,cb:on=>{world.children[0].userData.mesh.scale.set(1,on?0.9966:1,1);}}]);
+  },
+  update(dt){ world.children[0].rotation.y+=dt*0.06; world.children[1].rotation.y+=dt*0.06; }
+});
+
+/* 2 ---- Gravity field vs magnetic field ---- */
+MODULES.push({
+  title:'Gravity: the field that does the pulling',
+  explain:`Newton's law is the whole engine. The force between two masses is <span class="num">F = G&middot;M&middot;m / r&sup2;</span>. Because a satellite's mass is tiny next to Earth's, what it feels is just Earth's <span class="term">gravitational field</span>, an acceleration <span class="num">g = G&middot;M / r&sup2;</span> pointing straight at the centre. The key word is <b>inverse square</b>: double your distance and gravity drops to a quarter. It never reaches zero, so nothing truly "detaches"; the Moon is still firmly held at <span class="num">384,400 km</span>. What people mean by escaping is having enough speed that the orbit opens up and never returns.
+  <br><br>Do not confuse this with the <span class="term">magnetic field</span>. Gravity comes from <b>mass</b> and points radially inward, the same everywhere around the globe. Magnetism comes from electric currents in Earth's molten iron outer core, a spinning dynamo, and it loops from pole to pole like a bar magnet. Toggle between them: radial spokes for gravity, looping lines for magnetism. They share a planet and almost nothing else.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004));
+    this.gGrp=new THREE.Group(); this.mGrp=new THREE.Group(); world.add(this.gGrp); world.add(this.mGrp);
+    // gravity spokes: arrows pointing inward, length ~ 1/r^2, at several radii along a fan
+    for(let k=0;k<14;k++){
+      const a=k/14*Math.PI*2;
+      for(const rr of [1.25,1.6,2.2,3.2]){
+        const o=new THREE.Vector3(rr*Math.cos(a),0,rr*Math.sin(a));
+        const len=0.45/(rr*rr)+0.04;
+        this.gGrp.add(arrow(o.clone().multiplyScalar(-1),o,len,0x5ad1ff));
+      }
+    }
+    // magnetic dipole field lines
+    for(let i=0;i<10;i++){
+      const L=1.4+i*0.45; const pts=[];
+      for(let th=2;th<178;th+=3){const t=th*Math.PI/180; const r=L*Math.sin(t)*Math.sin(t);
+        if(r<1.0)continue; pts.push(new THREE.Vector3(r*Math.sin(t),r*Math.cos(t),0));}
+      if(pts.length>2){const a=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xff8aa0,transparent:true,opacity:0.7}));
+        for(let rot=0;rot<4;rot++){const c=a.clone();c.rotation.y=rot*Math.PI/2;this.mGrp.add(c);}}
+    }
+    this.mGrp.visible=false;
+    this.tm=dot(0.05,0xffb454); this.tm.position.set(2,0,0); world.add(this.tm); this.tmA=arrow(new THREE.Vector3(-1,0,0),this.tm.position,0.4,0xffb454); world.add(this.tmA);
+    this.setAlt(1000);
+    cam.r=4.2;
+  },
+  setAlt(km){
+    const r=rU(km); this.tm.position.set(r,0,0);
+    const g=9.81/(r*r);
+    this.tmA.position.copy(this.tm.position);
+    this.tmA.setLength(Math.min(0.7,0.5/(r*r)+0.05),0.12,0.08);
+    setRail('Gravity readout',[
+      ['Test mass altitude',Math.round(km).toLocaleString()+' km'],
+      ['Distance from centre',(r).toFixed(2)+' R'],
+      ['g at surface','9.81 m/s\u00B2'],
+      ['g here',g.toFixed(2)+' m/s\u00B2','#ffb454'],
+      ['vs surface',(g/9.81*100).toFixed(0)+'%','#5ad1ff']
+    ]);
+  },
+  controls(){
+    slider({label:'Test mass altitude (km)',value:1000,min:0,max:36000,step:100,fmt:v=>Math.round(v).toLocaleString(),on:v=>this.setAlt(v)});
+    toggleRow([
+      {label:'Gravity field',on:true,cb:on=>{this.gGrp.visible=on;}},
+      {label:'Magnetic field',on:false,cb:on=>{this.mGrp.visible=on;}}
+    ]);
+  },
+  update(dt){ world.children[0].rotation.y+=dt*0.05; }
+});
+
+/* 3 ---- Newton's cannonball: what an orbit IS ---- */
+MODULES.push({
+  title:'What an orbit actually is',
+  explain:`Newton's own thought experiment cracks it. Put a cannon on a mountain and fire sideways. Slow, the ball arcs down and hits the ground. Faster, it lands farther away. Fast enough, and the ground curves away beneath it just as fast as it falls, so it keeps missing the Earth forever. <b>That is an orbit: continuous free fall.</b> The satellite is always falling toward Earth; it simply has enough sideways speed never to arrive.
+  <br><br>Drag the launch speed. Below about <span class="num">7.9 km/s</span> at this altitude the path strikes the surface (a suborbital lob, like a missile). Right around <span class="num">7.9 km/s</span> you get a clean circle. Push higher and the far side lifts into an <span class="term">ellipse</span>. Past <span class="num">11.2 km/s</span>, escape velocity, the path never closes and the body leaves for good. Blue arrow is velocity (where it is going), orange is gravity (always toward the centre). Watch how gravity is always pulling sideways-to-motion, which is what curves the path.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004));
+    this.r0=1.04; this.launch=new THREE.Vector3(this.r0,0,0);
+    world.add(dot(0.045,0xffffff).translateX(this.r0)); // launch site marker via mesh position
+    const m=dot(0.04,0xffffff); m.position.copy(this.launch); world.add(m);
+    this.proj=dot(0.05,0x5ad1ff); world.add(this.proj);
+    this.trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([this.launch.clone()]),new THREE.LineBasicMaterial({color:0x5ad1ff}));
+    world.add(this.trail);
+    this.vArr=arrow(new THREE.Vector3(0,0,1),this.launch,0.4,0x5ad1ff); world.add(this.vArr);
+    this.gArr=arrow(new THREE.Vector3(-1,0,0),this.launch,0.3,0xffb454); world.add(this.gArr);
+    this.speedKms=7.9; this.reset();
+    cam.r=3.6;
+  },
+  reset(){
+    const v=this.speedKms/VC_SURF; // scene speed (mu=1)
+    this.state={p:this.launch.clone(),v:new THREE.Vector3(0,0,v)};
+    this.path=[this.launch.clone()]; this.dead=false; this.status='in flight';
+    this.refreshTrail();
+  },
+  refreshTrail(){ this.trail.geometry.dispose(); this.trail.geometry=new THREE.BufferGeometry().setFromPoints(this.path); },
+  accel(p){ const r=p.length(); return p.clone().multiplyScalar(-1/(r*r*r)); },
+  rk4(s,h){
+    const a=p=>this.accel(p);
+    const p0=s.p,v0=s.v;
+    const k1v=a(p0), k1p=v0;
+    const k2v=a(p0.clone().addScaledVector(k1p,h/2)), k2p=v0.clone().addScaledVector(k1v,h/2);
+    const k3v=a(p0.clone().addScaledVector(k2p,h/2)), k3p=v0.clone().addScaledVector(k2v,h/2);
+    const k4v=a(p0.clone().addScaledVector(k3p,h)),   k4p=v0.clone().addScaledVector(k3v,h);
+    const p=p0.clone().add(k1p.clone().add(k2p.clone().multiplyScalar(2)).add(k3p.clone().multiplyScalar(2)).add(k4p).multiplyScalar(h/6));
+    const v=v0.clone().add(k1v.clone().add(k2v.clone().multiplyScalar(2)).add(k3v.clone().multiplyScalar(2)).add(k4v).multiplyScalar(h/6));
+    return {p:p,v:v};
+  },
+  controls(){
+    slider({label:'Launch speed (km/s)',value:7.9,min:1,max:12,step:0.05,fmt:v=>v.toFixed(2),on:v=>{this.speedKms=v;this.reset();}});
+    button('Re-fire',()=>this.reset());
+  },
+  update(dt){
+    if(world.children[0]) world.children[0].rotation.y+=dt*0.02;
+    if(this.dead){ this.setRail2(); return; }
+    const steps=60, h=0.012;
+    for(let i=0;i<steps;i++){
+      this.state=this.rk4(this.state,h);
+      const r=this.state.p.length();
+      if(r<=1.0){ this.dead=true; this.status='impact (suborbital)'; break; }
+      if(r>9 && this.state.v.lengthSq()>2/r){ this.dead=true; this.status='escaped'; break; }
+      if(i%4===0){ this.path.push(this.state.p.clone()); if(this.path.length>1600)this.path.shift(); }
+    }
+    this.refreshTrail();
+    this.proj.position.copy(this.state.p);
+    this.vArr.position.copy(this.state.p); this.vArr.setDirection(this.state.v.clone().normalize());
+    this.vArr.setLength(Math.min(0.6,this.state.v.length()*0.4),0.12,0.08);
+    this.gArr.position.copy(this.state.p); this.gArr.setDirection(this.state.p.clone().multiplyScalar(-1).normalize());
+    this.setRail2();
+  },
+  setRail2(){
+    const r=this.state.p.length();
+    const vc=this.state.v.length()*VC_SURF;
+    let col='#5ad1ff'; if(this.status.indexOf('impact')>=0)col='#ff6b6b'; if(this.status==='escaped')col='#79e08a';
+    setRail('Trajectory',[
+      ['Launch speed',this.speedKms.toFixed(2)+' km/s'],
+      ['Current speed',vc.toFixed(2)+' km/s','#5ad1ff'],
+      ['Altitude',Math.round((r-1)*EARTH_KM).toLocaleString()+' km'],
+      ['Circular @ surf','7.91 km/s','#8a97ad'],
+      ['Escape @ surf','11.18 km/s','#8a97ad'],
+      ['Status',this.status,col]
+    ]);
+  }
+});
+
+/* 4 ---- Orbital plane, inclination, lat/long ---- */
+MODULES.push({
+  title:'Orbital plane, inclination, and the grid',
+  explain:`Lay the globe's grid down first. <span class="term">Latitude</span> is your angle north or south of the equator, 0&deg; at the equator to 90&deg; at the poles (the bright cyan line is the equator). <span class="term">Longitude</span> is your angle east or west of the prime meridian (the orange line). Together they pin any point on Earth.
+  <br><br>Now the orbit. A satellite's path lies in a flat <span class="term">orbital plane</span>, and that plane <b>always passes through Earth's centre</b>, never off to one side; gravity points at the centre, so the motion stays centred. The tilt of that plane against the equator is the <span class="term">inclination</span>. At <span class="num">0&deg;</span> the orbit hugs the equator. At <span class="num">90&deg;</span> it is polar, crossing both poles, ideal for mapping the whole planet. Notice the consequence: a satellite at inclination <i>i</i> only ever flies over latitudes between <span class="num">+i</span> and <span class="num">-i</span>. Inclination is a ceiling on which parts of Earth you can pass over. The <span class="term">ascending node</span> is where it crosses the equator going north.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004,0x2b6da3,30));
+    this.R=1.45; this.inc=51.6; this.raan=0;
+    this.orbit=new THREE.Group(); world.add(this.orbit);
+    this.ring=circle(this.R,0x5ad1ff,0.95); this.orbit.add(this.ring);
+    const disk=new THREE.Mesh(new THREE.CircleGeometry(this.R,64),new THREE.MeshBasicMaterial({color:0x5ad1ff,transparent:true,opacity:0.07,side:THREE.DoubleSide}));
+    disk.rotation.x=-Math.PI/2; this.orbit.add(disk); this.disk=disk;
+    this.sat=dot(0.06,0xffffff); this.orbit.add(this.sat);
+    this.node=label('ascending node','#79e08a'); this.orbit.add(this.node);
+    this.t=0; this.apply();
+    cam.r=3.6;
+  },
+  apply(){
+    this.orbit.rotation.set(0,0,0);
+    this.orbit.rotation.z=this.inc*Math.PI/180;     // tilt about line of nodes (X)
+    this.orbit.rotation.y=this.raan*Math.PI/180;    // spin the node line
+    setRail('Orbit geometry',[
+      ['Inclination',this.inc.toFixed(0)+'\u00B0','#5ad1ff'],
+      ['RAAN',this.raan.toFixed(0)+'\u00B0'],
+      ['Altitude',Math.round((this.R-1)*EARTH_KM).toLocaleString()+' km'],
+      ['Max latitude','\u00B1'+this.inc.toFixed(0)+'\u00B0','#ffb454'],
+      ['Type',this.inc<10?'near-equatorial':this.inc>80?'near-polar':'inclined','#79e08a']
+    ]);
+  },
+  controls(){
+    slider({label:'Inclination',value:51.6,min:0,max:90,step:1,fmt:v=>v+'\u00B0',on:v=>{this.inc=v;this.apply();}});
+    slider({label:'RAAN (node longitude)',value:0,min:0,max:360,step:5,fmt:v=>v+'\u00B0',on:v=>{this.raan=v;this.apply();}});
+    toggleRow([{label:'Show plane',on:true,cb:on=>{this.disk.visible=on;}}]);
+  },
+  update(dt){
+    world.children[0].rotation.y+=dt*0.05; world.children[1].rotation.y+=dt*0.05;
+    this.t+=dt*0.6; const a=this.t;
+    this.sat.position.set(this.R*Math.cos(a),0,this.R*Math.sin(a));
+    this.node.position.set(this.R*1.05,0,0);
+  }
+});
+
+/* 5 ---- Orbit shapes: circle vs ellipse (Kepler) ---- */
+MODULES.push({
+  title:'Why orbits are ellipses',
+  explain:`Solve Newton's gravity for a small body and the answer is always a <span class="term">conic section</span>, a circle, ellipse, parabola or hyperbola. Every closed orbit is an <span class="term">ellipse</span>, with Earth sitting at one <span class="term">focus</span>, not the centre. A circle is just the special case where the squish, the <span class="term">eccentricity</span> <i>e</i>, is zero.
+  <br><br>Two numbers describe the shape. The <span class="term">semi-major axis</span> <i>a</i> is the average size, and <i>e</i> is how stretched it is. The low point is <span class="term">perigee</span>, the high point <span class="term">apogee</span>. This is Kepler's first law. His second law is the moving part to watch: the satellite <b>speeds up near perigee and slows near apogee</b>, sweeping equal areas in equal time. It trades height for speed, the same way a thrown ball is fastest at the bottom of its arc. Drag <i>e</i> up and watch the satellite race through the low pass and crawl at the top.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004));
+    this.a=2.2; this.e=0.45; this.orbit=new THREE.Group(); world.add(this.orbit);
+    this.line=ellipseLine(this.a,this.e,0x5ad1ff); this.orbit.add(this.line);
+    this.sat=dot(0.06,0xffffff); this.orbit.add(this.sat);
+    this.vArr=arrow(new THREE.Vector3(0,0,1),new THREE.Vector3(),0.3,0x5ad1ff); this.orbit.add(this.vArr);
+    this.peri=label('perigee','#79e08a'); this.apo=label('apogee','#ffb454'); this.orbit.add(this.peri); this.orbit.add(this.apo);
+    this.th=0; this.apply();
+    cam.r=4.8;
+  },
+  clampE(){ if(this.a*(1-this.e)<1.06) this.e=1-1.06/this.a; if(this.e<0)this.e=0; },
+  apply(){
+    this.clampE();
+    this.orbit.remove(this.line); this.line.geometry.dispose();
+    this.line=ellipseLine(this.a,this.e,0x5ad1ff); this.orbit.add(this.line);
+    const rp=this.a*(1-this.e), ra=this.a*(1+this.e);
+    this.peri.position.set(rp,0,0); this.apo.position.set(-ra,0,0.0001);
+    setRail('Shape (Kepler)',[
+      ['Semi-major a',this.a.toFixed(2)+' R'],
+      ['Eccentricity',this.e.toFixed(2),'#5ad1ff'],
+      ['Perigee alt',Math.round((rp-1)*EARTH_KM).toLocaleString()+' km','#79e08a'],
+      ['Apogee alt',Math.round((ra-1)*EARTH_KM).toLocaleString()+' km','#ffb454'],
+      ['Shape',this.e<0.02?'circle':'ellipse']
+    ]);
+  },
+  controls(){
+    slider({label:'Semi-major axis a (R)',value:2.2,min:1.2,max:6,step:0.05,fmt:v=>v.toFixed(2),on:v=>{this.a=v;this.apply();}});
+    slider({label:'Eccentricity e',value:0.45,min:0,max:0.85,step:0.01,fmt:v=>v.toFixed(2),on:v=>{this.e=v;this.apply();}});
+  },
+  update(dt){
+    world.children[0].rotation.y+=dt*0.05; world.children[1].rotation.y+=dt*0.05;
+    const p=this.a*(1-this.e*this.e), h=Math.sqrt(p); // mu=1
+    const r=p/(1+this.e*Math.cos(this.th));
+    this.th+=(h/(r*r))*dt*1.4;
+    const pos=new THREE.Vector3(r*Math.cos(this.th),0,r*Math.sin(this.th));
+    this.sat.position.copy(pos);
+    // velocity direction (perpendicular-ish), speed ~ sqrt(2/r - 1/a)
+    const speed=Math.sqrt(Math.max(0.01,2/r-1/this.a));
+    const tang=new THREE.Vector3(-Math.sin(this.th),0,Math.cos(this.th));
+    this.vArr.position.copy(pos); this.vArr.setDirection(tang); this.vArr.setLength(speed*0.45,0.1,0.07);
+  }
+});
+
+/* 6 ---- Altitude regimes + the Moon ---- */
+MODULES.push({
+  title:'How high is high: LEO, MEO, GEO, the Moon',
+  explain:`Orbits get sorted by altitude. <span class="term">LEO</span>, low Earth orbit, runs roughly <span class="num">160</span> to <span class="num">2,000 km</span>; the Space Station lives here near 400 km, lapping Earth every 90 minutes. <span class="term">MEO</span>, medium, holds the navigation fleets like GPS at about <span class="num">20,200 km</span>. <span class="term">GEO</span>, geostationary, sits at exactly <span class="num">35,786 km</span>, where the orbit takes one full day, so the satellite hangs over a fixed spot on Earth; that is why dishes point at one patch of sky. Far past all of it, the <span class="term">Moon</span> orbits at about <span class="num">384,400 km</span>, near 60 Earth radii out, our one natural satellite.
+  <br><br>The trap is scale. Drawn honestly, LEO is a hair above the surface and the Moon is off the page. Toggle compressed view to fit them on screen and read the ratios, then switch to true scale and zoom out to feel how empty the gap really is. The white satellite on the GEO ring stays locked over one longitude as Earth turns beneath it.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004));
+    this.compressed=true; this.showMoon=true; this.grp=new THREE.Group(); world.add(this.grp);
+    this.rebuild(); cam.r=8;
+  },
+  map(r){ return this.compressed ? 1+Math.log10(r)/Math.log10(60.3)*7 : r; },
+  rebuild(){
+    disposeGroup(this.grp);
+    const bands=[['LEO 400 km',rU(400),0x6fe0ff],['LEO top 2,000 km',rU(2000),0x5ad1ff],
+                 ['MEO / GPS 20,200 km',rU(20200),0x8a7bff],['GEO 35,786 km',rU(35786),0xffb454]];
+    bands.forEach(b=>{ const R=this.map(b[1]); const c=circle(R,b[2],0.8); c.rotation.x=Math.PI/2; this.grp.add(c);
+      const l=label(b[0],'#'+b[2].toString(16).padStart(6,'0')); l.position.set(0,0,R); this.grp.add(l); });
+    // GEO satellite
+    this.geoR=this.map(rU(35786)); this.geo=dot(0.07,0xffffff); this.grp.add(this.geo);
+    if(this.showMoon){ const Rm=this.map(60.3); const mo=circle(Rm,0x9fb4d6,0.5); mo.rotation.x=Math.PI/2; this.grp.add(mo);
+      const moon=dot(0.273*(this.compressed?0.5:1),0xcfd6e2); moon.position.set(Rm,0,0); this.grp.add(moon);
+      const ml=label('Moon  384,400 km','#cfd6e2'); ml.position.set(Rm,0.3,0); this.grp.add(ml); }
+    setRail('Altitude bands',[
+      ['ISS / LEO','~400 km','#6fe0ff'],
+      ['GPS / MEO','20,200 km','#8a7bff'],
+      ['GEO','35,786 km','#ffb454'],
+      ['Moon','384,400 km','#cfd6e2'],
+      ['View',this.compressed?'compressed (log)':'true scale','#5ad1ff']
+    ]);
+  },
+  controls(){
+    toggleRow([
+      {label:'Compressed scale',on:true,cb:on=>{this.compressed=on;this.rebuild();cam.r=on?8:80;}},
+      {label:'Show Moon',on:true,cb:on=>{this.showMoon=on;this.rebuild();}}
+    ]);
+  },
+  update(dt){
+    world.children[0].rotation.y+=dt*0.1; world.children[1].rotation.y+=dt*0.1;
+    this.gt=(this.gt||0)+dt*0.1; // GEO matches Earth spin -> appears fixed
+    if(this.geo) this.geo.position.set(this.geoR*Math.cos(-this.gt),0,this.geoR*Math.sin(-this.gt));
+  }
+});
+
+/* 7 ---- Launch, delta-v, plane change ---- */
+MODULES.push({
+  title:'Where you can launch, and what it costs',
+  explain:`You do not get to pick any orbit from any spot. The orbital plane must pass through both Earth's centre and your launch site, so <b>the lowest inclination you can reach equals your launch latitude</b>. Launch from the equator and you can reach anything down to 0&deg;; launch from <span class="num">45&deg;N</span> and 45&deg; is your floor without an expensive correction. This is why equatorial sites like Kourou are prized, and why low-latitude Cape Canaveral beats higher pads for equatorial missions.
+  <br><br>Direction matters too. Earth already spins eastward, giving a free <span class="term">delta-v</span> of about <span class="num">465 m/s</span> at the equator (less as you go poleward, scaled by cos of latitude). Launch east and you pocket it; that is the standard, and it sends spent stages out over ocean. Finally, the costly part: a <span class="term">plane change</span> of angle &Delta;i costs <span class="num">&Delta;v = 2&middot;v&middot;sin(&Delta;i/2)</span>. At orbital speed near 7.7 km/s, even a 30&deg; turn burns nearly 4 km/s, often more than reaching orbit in the first place. That is why you choose the right plane on the ground, not in space.`,
+  build(){
+    world.add(makeEarth({})); world.add(graticule(1.004,0x2b6da3,30));
+    this.lat=28.5; this.tgt=28.5;
+    this.orbit=new THREE.Group(); world.add(this.orbit);
+    this.R=1.45; this.ring=circle(this.R,0x5ad1ff,0.9); this.orbit.add(this.ring);
+    this.site=dot(0.06,0xffb454); world.add(this.site);
+    this.sl=label('launch site','#ffb454'); world.add(this.sl);
+    this.east=arrow(new THREE.Vector3(0,0,1),new THREE.Vector3(),0.3,0x79e08a); world.add(this.east);
+    this.apply();
+    cam.r=3.6;
+  },
+  apply(){
+    const phi=this.lat*Math.PI/180;
+    const pos=new THREE.Vector3(Math.cos(phi),Math.sin(phi),0).multiplyScalar(1.02);
+    this.site.position.copy(pos); this.sl.position.copy(pos.clone().multiplyScalar(1.12));
+    // eastward tangent at the site (Earth spins about Y, so east is +Z here)
+    this.east.position.copy(pos); this.east.setDirection(new THREE.Vector3(0,0,1));
+    // orbit ring at inclination = max(lat, tgt-floor) ; can't go below lat
+    const inc=Math.max(this.tgt,this.lat);
+    this.orbit.rotation.set(0,0,0); this.orbit.rotation.z=inc*Math.PI/180;
+    const east=465*Math.cos(phi);
+    const di=Math.abs(this.tgt-this.lat); // illustrative plane-change need below floor
+    const dv=2*7.67*Math.sin((di*Math.PI/180)/2);
+    setRail('Launch budget',[
+      ['Launch latitude',this.lat.toFixed(0)+'\u00B0','#ffb454'],
+      ['Min inclination',this.lat.toFixed(0)+'\u00B0','#5ad1ff'],
+      ['Target incl.',this.tgt.toFixed(0)+'\u00B0'],
+      ['Eastward bonus','+'+east.toFixed(0)+' m/s','#79e08a'],
+      ['Plane change \u0394v',(this.tgt<this.lat?dv.toFixed(2)+' km/s':'0 (above floor)'),this.tgt<this.lat?'#ff6b6b':'#8a97ad']
+    ]);
+  },
+  controls(){
+    slider({label:'Launch latitude',value:28.5,min:0,max:80,step:1,fmt:v=>v+'\u00B0',on:v=>{this.lat=v;this.apply();}});
+    slider({label:'Target inclination',value:28.5,min:0,max:90,step:1,fmt:v=>v+'\u00B0',on:v=>{this.tgt=v;this.apply();}});
+  },
+  update(dt){ world.children[0].rotation.y+=dt*0.04; world.children[1].rotation.y+=dt*0.04; }
+});
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+function init(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,0.05,2000);
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth,innerHeight);
+  document.getElementById('app').appendChild(renderer.domElement);
+
+  scene.add(starfield());
+  sun=new THREE.DirectionalLight(0xffffff,1.15); sun.position.set(5,3,5); scene.add(sun);
+  scene.add(new THREE.AmbientLight(0x40516e,0.7));
+  world=new THREE.Group(); scene.add(world);
+
+  bindControls();
+  bindCamera();
+  addEventListener('resize',onResize);
+  loadModule(0);
+  lastT=performance.now();
+  requestAnimationFrame(loop);
+
+  const h=document.getElementById('hint'); h.classList.add('show');
+  hintTimer=setTimeout(()=>h.classList.remove('show'),3200);
+}
+
+function onResize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
+
+function loop(now){
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now; clock+=dt;
+  if(active && active.update) try{ active.update(dt); }catch(e){}
+  // camera from spherical
+  const sp=Math.sin(cam.phi);
+  camera.position.set(cam.r*sp*Math.sin(cam.theta), cam.r*Math.cos(cam.phi), cam.r*sp*Math.cos(cam.theta)).add(cam.target);
+  camera.lookAt(cam.target);
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* camera: drag to orbit, wheel/pinch to zoom */
+function bindCamera(){
+  const el=renderer.domElement; let down=false,lx=0,ly=0,pinch=0;
+  function px(e){return e.touches?e.touches[0].clientX:e.clientX;}
+  function py(e){return e.touches?e.touches[0].clientY:e.clientY;}
+  function start(e){ if(e.touches&&e.touches.length===2){pinch=dist2(e);return;} down=true;lx=px(e);ly=py(e); document.getElementById('hint').classList.remove('show'); }
+  function move(e){
+    if(e.touches&&e.touches.length===2){ const d=dist2(e); if(pinch)cam.r*=pinch/d; pinch=d; clampR(); e.preventDefault(); return; }
+    if(!down)return;
+    const x=px(e),y=py(e);
+    cam.theta-=(x-lx)*0.006; cam.phi-=(y-ly)*0.006;
+    cam.phi=Math.max(0.12,Math.min(Math.PI-0.12,cam.phi));
+    lx=x;ly=y; e.preventDefault();
+  }
+  function end(){down=false;pinch=0;}
+  function dist2(e){const a=e.touches[0],b=e.touches[1];return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function clampR(){cam.r=Math.max(cam.rMin,Math.min(cam.rMax,cam.r));}
+  el.addEventListener('mousedown',start); addEventListener('mousemove',move); addEventListener('mouseup',end);
+  el.addEventListener('touchstart',start,{passive:false}); el.addEventListener('touchmove',move,{passive:false}); el.addEventListener('touchend',end);
+  el.addEventListener('wheel',e=>{cam.r*=1+Math.sign(e.deltaY)*0.08;clampR();e.preventDefault();},{passive:false});
+}
+
+/* lesson navigation + sheet */
+let idx=0;
+function loadModule(i){
+  idx=Math.max(0,Math.min(MODULES.length-1,i)); active=MODULES[idx];
+  cam.rMin=1.25; cam.rMax=140;
+  disposeGroup(world);
+  setRail('',[]);
+  document.getElementById('mtitle').textContent=active.title;
+  document.getElementById('counter').textContent='Module '+(idx+1)+' / '+MODULES.length;
+  document.getElementById('gripnum').textContent=(idx+1)+'/'+MODULES.length;
+  document.getElementById('explain').innerHTML=active.explain;
+  clearControls();
+  try{ active.build(); }catch(e){ showErr(e); }
+  if(active.controls) try{ active.controls(); }catch(e){}
+  buildDots();
+  document.getElementById('prev').disabled=(idx===0);
+  const nx=document.getElementById('next'); nx.textContent=(idx===MODULES.length-1)?'Restart \u21BB':'Next \u2192';
+  document.getElementById('sheetbody').scrollTop=0;
+}
+function buildDots(){
+  const d=document.getElementById('dots'); d.innerHTML='';
+  MODULES.forEach((m,i)=>{const s=document.createElement('div');s.className='dot'+(i===idx?' active':'');
+    s.title=m.title; s.addEventListener('click',()=>loadModule(i)); d.appendChild(s);});
+}
+function bindControls(){
+  document.getElementById('prev').addEventListener('click',()=>loadModule(idx-1));
+  document.getElementById('next').addEventListener('click',()=>loadModule(idx===MODULES.length-1?0:idx+1));
+  const sheet=document.getElementById('sheet');
+  document.getElementById('grip').addEventListener('click',()=>sheet.classList.toggle('collapsed'));
+}
+function showErr(e){ const el=document.getElementById('err'); el.style.display='flex'; el.textContent='Render error: '+(e&&e.message?e.message:e); }
+
+try{ init(); }catch(e){ showErr(e); }
+})();
+</script>
+</body>
+</html>
