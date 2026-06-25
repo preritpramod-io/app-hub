@@ -18,6 +18,18 @@
     {
       "source": "/activities/defence/india/(.*)",
       "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/$1"
+    },
+    {
+      "source": "/study/astrodynamics",
+      "destination": "/study/astrodynamics/index.html"
+    },
+    {
+      "source": "/study/astrodynamics/",
+      "destination": "/study/astrodynamics/index.html"
+    },
+    {
+      "source": "/study/astrodynamics/(.*)",
+      "destination": "/study/astrodynamics/index.html"
     }
   ]
 }
