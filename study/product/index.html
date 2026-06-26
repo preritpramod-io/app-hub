@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Multiscale Space Systems, Product</title>
+<style>
+  :root{
+    --bg:#06101f; --panel:#0e1c33; --panel2:#0c1830; --ink:#e8eef7; --muted:#93a3bd;
+    --line:#1c2c47; --gold:#c8a85a; --gold-soft:rgba(200,168,90,0.14); --blue:#5aa0e0;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:radial-gradient(1100px 560px at 70% -10%,#10254a 0%,var(--bg) 60%);color:var(--ink);font-family:var(--sans);line-height:1.6}
+  a{color:inherit;text-decoration:none}
+  #bar{position:sticky;top:0;z-index:50;background:rgba(6,16,31,0.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+    padding:calc(9px + env(safe-area-inset-top,0px)) 12px 10px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .brand img{width:26px;height:26px;border-radius:6px;flex:0 0 auto;object-fit:contain;background:#0a1830}
+  .brand .wm{font-family:var(--mono);font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand .wm b{color:var(--ink);font-weight:600}
+  nav.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+  nav.tabs a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 6px;border-radius:11px;
+    border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font-family:var(--mono);font-size:12px;letter-spacing:0.07em;text-transform:uppercase;text-align:center}
+  nav.tabs a.active{color:var(--gold);border-color:rgba(200,168,90,0.5);background:var(--gold-soft);font-weight:600}
+  main{max-width:680px;margin:0 auto;padding:48px 18px 70px;text-align:center}
+  .orbit{margin:10px auto 22px;width:120px;height:120px;position:relative}
+  .orbit .ring{position:absolute;inset:0;border:1.5px solid var(--line);border-radius:50%}
+  .orbit .ring.b{inset:18px;border-color:rgba(90,160,224,0.4);transform:rotate(28deg) scaleY(0.5)}
+  .orbit .core{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--gold)}
+  .orbit .sat{position:absolute;left:50%;top:0;width:9px;height:9px;margin-left:-4px;border-radius:50%;background:var(--blue);
+    animation:spin 4s linear infinite;transform-origin:4px 60px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.26em;text-transform:uppercase;color:var(--gold)}
+  h1{font-size:22px;margin:6px 0 8px;font-weight:650}
+  p{color:var(--muted);font-size:14px;max-width:46ch;margin:0 auto 10px}
+</style>
+</head>
+<body>
+<div id="bar">
+  <div class="brand">
+    <img src="https://multiscalespacesystems.com/mss-logo-app.png" alt="MSS" onerror="this.style.display='none'"/>
+    <span class="wm"><b>Multiscale Space Systems</b></span>
+  </div>
+  <nav class="tabs">
+    <a href="/study/astrodynamics">Training</a>
+    <a class="active" href="/study/product" aria-current="page">Product</a>
+    <a href="/study/business">Business</a>
+  </nav>
+</div>
+<main>
+  <div class="orbit"><div class="ring"></div><div class="ring b"></div><div class="core"></div><div class="sat"></div></div>
+  <div class="eyebrow">Product</div>
+  <h1>In progress</h1>
+  <p>The interactive orbit and morphing simulator is being built here. Adjacent orbital planes across low, medium, and high Earth orbit, a vehicle you can freeze and run, live velocity, gravity, and drag vectors, and drag set by the morphing aeroshell through three petal actuators.</p>
+  <p>The aeroshell design views will live here too. Nothing is rendered yet, by design.</p>
+</main>
+</body>
+</html>
