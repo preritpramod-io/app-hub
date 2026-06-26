@@ -299,12 +299,12 @@ const MODULES=[];
 MODULES.push({
   title:'The field, and its vocabulary',
   camR:3.4,
-  explain:`<p>The motion of bodies under gravity is governed by a single law that Newton set down in 1687. Two named disciplines sit on top of it. <span class="term">Celestial mechanics</span> is the physics of how natural bodies move; <span class="term">orbital mechanics</span>, also called <span class="term">astrodynamics</span>, is the engineering of placing a spacecraft on a chosen trajectory. Both reduce to one statement: every mass attracts every other mass, and that attraction bends an otherwise straight path into an orbit.</p>
-  <p>The terms used throughout this material are defined once here. An <span class="term">orbit</span> is the closed path one body traces around another. The <span class="term">orbital plane</span> is the flat surface that path occupies, and it always contains the centre of the primary body. <span class="term">Inclination</span> is the tilt of that plane relative to the equator. <span class="term">Eccentricity</span> measures how far the orbit departs from a circle. <span class="term">Apogee</span> and <span class="term">perigee</span> are the farthest and nearest points to Earth. <span class="term">Delta-v</span> is any change in velocity, and it is the quantity that propellant buys. A <span class="term">plane change</span> rotates the orbital plane and is among the most costly maneuvers. <span class="term">LEO</span>, <span class="term">MEO</span>, and <span class="term">GEO</span> denote low, medium, and geostationary altitude bands.</p>`,
+  explain:`<p>The motion of bodies under gravity follows a single law that Newton set down in 1687. Two named disciplines sit on top of it. Celestial mechanics is the physics of how natural bodies move. Orbital mechanics, also called astrodynamics, is the engineering of placing a spacecraft on a chosen path. Both reduce to one idea. Every mass attracts every other mass, and that attraction bends an otherwise straight path into an orbit.</p>
+  <p>A few terms recur throughout, so they are defined once here. An orbit is the closed path one body traces around another. The orbital plane is the flat surface that path lies in, and it always contains the centre of the planet. Inclination is the tilt of that plane relative to the equator. Eccentricity measures how far the orbit departs from a circle. Apogee and perigee are the farthest and nearest points to Earth. A change in velocity is called delta v, and it is the quantity that propellant buys. A plane change rotates the orbital plane and is among the most costly maneuvers. Three altitude bands appear often, low Earth orbit (LEO), medium Earth orbit (MEO), and geostationary orbit (GEO).</p>`,
   eqs:[
     {tex:String.raw`\vec{F} = G\,\frac{M\,m}{r^{2}}\,(-\hat{r})`, note:'Newton: the force is attractive and along the line joining the masses.'}
   ],
-  narr:`This subject has a precise name. The physics of how bodies move under gravity is called celestial mechanics. The engineering of placing a spacecraft on a chosen path is called orbital mechanics, or astrodynamics. Both rest on one law from Newton: every mass attracts every other mass, and that attraction is what bends a straight line into an orbit. Here is the vocabulary you will hear repeatedly. An orbit is the closed path one body traces around another. The orbital plane is the flat surface that path lies in, and it always passes through the centre of the planet. Inclination is the tilt of that plane against the equator. Eccentricity is how far the orbit departs from a circle. Apogee and perigee are the farthest and nearest points to Earth. Delta v is any change in velocity, and it is what propellant pays for. A plane change rotates the orbital plane, and it is expensive. And the bands: low Earth orbit, medium Earth orbit, and geostationary orbit. Every one of these is built into a picture you can move.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004));
     const ax=new THREE.Group();
@@ -318,13 +318,13 @@ MODULES.push({
 MODULES.push({
   title:'The Earth: its shape and its atmosphere',
   camR:3.0,
-  explain:`<p>The Earth is not a perfect sphere. Because it rotates, it bulges at the equator and flattens at the poles, producing an <span class="term">oblate spheroid</span>. Its mean radius is about <b>6,371 km</b>. The equatorial radius exceeds the polar radius by roughly <b>21 km</b>, a flattening of about one part in 298. Modest as that sounds, it drives a measurable drift in real orbits, treated formally in the J2 perturbation.</p>
-  <p>Above the surface lies the <span class="term">atmosphere</span>, structured in layers: the <b>troposphere</b> to about 12 km, the <b>stratosphere</b> to about 50 km, the <b>mesosphere</b> to about 85 km, the <b>thermosphere</b> to about 600 km, and the tenuous <b>exosphere</b> beyond. The <span class="term">Karman line</span> at <b>100 km</b> is the conventional boundary of space. The essential fact is one of scale: nearly all of the atmosphere lies within one and a half percent of a single Earth radius. This is precisely why low orbits pass so close to the surface. Raise the exaggeration control to see the shells, then lower it to one to register their true thinness.</p>`,
+  explain:`<p>The Earth is not a perfect sphere. Because it rotates, it bulges at the equator and flattens at the poles, producing a shape called an oblate spheroid. Its mean radius is about 6,371 km. The equatorial radius is larger than the polar radius by roughly 21 km, a flattening of about one part in 298. Modest as that sounds, it is enough to drift a real orbit over time, an effect handled formally by what is called the J2 perturbation.</p>
+  <p>Above the surface sits the atmosphere, arranged in layers. The troposphere reaches to about 12 km and holds the weather. The stratosphere reaches to about 50 km and holds the ozone. Above those lie the mesosphere to about 85 km, the thermosphere to about 600 km, and the thin exosphere beyond. The conventional boundary of space, called the Karman line, sits at 100 km. The point worth feeling is one of scale. Nearly all of the atmosphere lies within one and a half percent of a single Earth radius, which is exactly why low orbits pass so close to the surface. Raise the exaggeration control to see the shells, then lower it to one to register how thin they truly are.</p>`,
   eqs:[
     {tex:String.raw`f = \frac{a-b}{a} \approx \frac{1}{298.3}`, note:'Flattening: a is the equatorial radius, b the polar radius.'},
     {tex:String.raw`h_{\text{Karman}} = 100\ \text{km} \approx 0.0157\,R_\oplus`, note:'The boundary of space, as a fraction of Earth radius.'}
   ],
-  narr:`The Earth is not a perfect ball. Because it spins, it bulges at the equator and flattens at the poles. The proper term is an oblate spheroid. Its mean radius is about six thousand three hundred seventy one kilometres, and the equator is wider than the pole to pole distance by about twenty one kilometres. That is a flattening of roughly one part in three hundred. Small, but it is large enough to drift a real orbit over time, which is handled formally by what is called the J2 perturbation. Above the surface sits the atmosphere, in layers. The troposphere holds the weather, up to about twelve kilometres. The stratosphere holds the ozone, to about fifty. Then the mesosphere, the thermosphere, and the thin exosphere fading into space. The Karman line at one hundred kilometres is the agreed boundary of space. Here is the point to feel. Nearly all of the air lies within one and a half percent of a single Earth radius. That is exactly why low orbits skim so close to the surface. Raise the exaggeration slider to see the shells, then drop it to one to feel how thin the air really is.`,
+  narr:``,
   build(){
     world.add(makeEarth({oblate:true})); world.add(graticule(1.004,0x2b6da3,30));
     const shells=new THREE.Group(); world.add(shells); this.shells=shells; this.exag=18; this.rebuild();
@@ -349,13 +349,13 @@ MODULES.push({
 MODULES.push({
   title:'Gravity: the field that does the pulling',
   camR:4.4,
-  explain:`<p>Newton's law of gravitation is the engine of the entire subject. The force between two masses is proportional to each mass and falls off with the square of the distance between them. Because a satellite's mass is negligible beside the Earth's, the satellite responds only to the Earth's field, an acceleration directed at the centre with magnitude <b>g(r) = GM / r&sup2;</b>. The defining feature is the inverse square: doubling the distance reduces gravity to one quarter.</p>
-  <p>Gravity never falls to zero, so nothing truly detaches. The Moon remains bound at 384,400 km. To <i>escape</i> means only to carry enough speed that the orbit opens and does not return. Gravity should not be confused with the <span class="term">magnetic field</span>. Gravity arises from <b>mass</b> and points radially inward, uniform in character over the globe. The magnetic field arises from circulating currents in the Earth's molten iron outer core, a self sustaining dynamo, and it loops from pole to pole like a bar magnet. Switch the display between the two: radial spokes for gravity, looping lines for magnetism.</p>`,
+  explain:`<p>Newton's law of gravitation is the engine of the whole subject. The force between two masses grows with each mass and falls off with the square of the distance between them. Because a satellite's mass is tiny beside the Earth's, the satellite responds only to the Earth's field, an acceleration aimed at the centre whose strength follows the inverse square shown below. The defining behaviour is that inverse square. Doubling the distance cuts gravity to one quarter.</p>
+  <p>Gravity never falls to zero, so nothing truly detaches. The Moon stays bound at 384,400 km. To escape means only to carry enough speed that the orbit opens and does not return. Gravity should not be confused with the magnetic field. Gravity comes from mass and points straight inward, with the same character everywhere. The magnetic field comes from circulating currents in the Earth's molten iron core, a self sustaining dynamo, and it loops from pole to pole like a bar magnet. Switch the display between the two. Radial spokes stand for gravity, looping lines for magnetism.</p>`,
   eqs:[
     {tex:String.raw`F = G\,\frac{M\,m}{r^{2}}, \qquad G = 6.674\times10^{-11}\ \mathrm{N\,m^2\,kg^{-2}}`, note:'Newton\u2019s law of universal gravitation.'},
     {tex:String.raw`g(r) = \frac{GM}{r^{2}} = g_0\left(\frac{R_\oplus}{r}\right)^{2}, \quad g_0 = 9.81\ \mathrm{m/s^2}`, note:'Surface gravity scaled by the inverse square of distance.'}
   ],
-  narr:`Newton's law of gravitation is the whole engine. The force between two masses grows with each mass and shrinks with the square of the distance between them. Because a satellite is tiny next to the Earth, it responds only to the Earth's field. That field is an acceleration pointing straight at the centre, equal to G times the Earth's mass divided by distance squared. The defining feature is the inverse square. Double your distance, and gravity drops to one quarter. Said another way: gravity weakens fast, but it never reaches zero. So nothing truly detaches. The Moon is still firmly held, three hundred eighty four thousand kilometres away. When people say escape, they do not mean gravity switched off. They mean carrying enough speed that the orbit opens up and never comes back. Now, do not confuse gravity with magnetism. Gravity comes from mass and points straight inward, the same character everywhere. The magnetic field comes from electric currents in the Earth's molten iron core, a spinning dynamo, and it loops from pole to pole like a bar magnet. Toggle between the two displays and watch how different they are. Drag the altitude slider and read how gravity falls with height.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004));
     this.gGrp=new THREE.Group(); this.mGrp=new THREE.Group(); world.add(this.gGrp); world.add(this.mGrp);
@@ -385,13 +385,13 @@ MODULES.push({
 MODULES.push({
   title:'What an orbit actually is',
   camR:3.8,
-  explain:`<p>Newton's thought experiment settles the matter. Place a cannon on a tall mountain and fire horizontally. At low speed the ball arcs to the ground. At higher speed it lands farther away. At sufficient speed the surface curves away beneath it as fast as it falls, so it continues to miss the Earth indefinitely. <b>An orbit is therefore continuous free fall.</b> The satellite is always falling toward the centre; it simply carries enough transverse speed never to arrive.</p>
-  <p>The thresholds follow from the energy of the motion. At this altitude, below roughly <b>7.9 km/s</b> the path intersects the surface, a suborbital trajectory of the kind a ballistic missile follows. Near 7.9 km/s the path closes into a circle. Above it the far side rises and the orbit becomes an <span class="term">ellipse</span>. At <b>11.2 km/s</b>, the escape speed, the path no longer closes and the body departs permanently. The blue vector is velocity, tangent to the path; the orange vector is gravity, always toward the centre. Note that gravity acts across the direction of motion, and that transverse pull is what curves a straight line into an orbit.</p>`,
+  explain:`<p>Newton's own thought experiment settles the matter. Place a cannon on a tall mountain and fire horizontally. At low speed the ball arcs to the ground. At higher speed it lands farther away. At a high enough speed the surface curves away beneath it just as fast as it falls, so it keeps missing the Earth forever. An orbit is therefore continuous free fall. The satellite is always falling toward the centre, and it simply carries enough sideways speed never to arrive.</p>
+  <p>The thresholds follow from the energy of the motion. At this altitude, below roughly 7.9 km per second the path strikes the surface, a suborbital lob of the kind a ballistic missile follows. Near 7.9 km per second the path closes into a circle. Above that the far side lifts and the orbit becomes an ellipse. At about 11.2 km per second, the escape speed, the path no longer closes and the body leaves for good. The blue arrow is velocity, drawn along the path. The orange arrow is gravity, always aimed at the centre. Notice that gravity pulls across the direction of motion, and that sideways pull is what curves a straight line into an orbit.</p>`,
   eqs:[
     {tex:String.raw`\frac{GMm}{r^{2}} = \frac{m\,v^{2}}{r} \;\Rightarrow\; v_{\text{circ}} = \sqrt{\frac{GM}{r}}`, note:'Circular orbit: gravity supplies exactly the centripetal force.'},
     {tex:String.raw`v_{\text{esc}} = \sqrt{\frac{2GM}{r}} = \sqrt{2}\,\;v_{\text{circ}}`, note:'Escape speed is the circular speed multiplied by root two.'}
   ],
-  narr:`Newton's own thought experiment cracks this open. Put a cannon on a tall mountain and fire sideways. Fire slowly, and the ball arcs down to the ground. Fire faster, and it lands farther away. Fire fast enough, and the ground curves away beneath it just as fast as the ball falls, so it keeps missing the Earth, forever. That is an orbit. It is continuous free fall. The satellite is always falling toward the centre. It simply carries enough sideways speed that it never arrives. The thresholds come straight from the energy. At this altitude, below about seven point nine kilometres per second, the path strikes the surface. That is a suborbital lob, the kind a missile follows. Right around seven point nine, the path closes into a circle. Above that, the far side lifts and the orbit becomes an ellipse. At eleven point two kilometres per second, the escape speed, the path no longer closes, and the body leaves for good. The blue arrow is velocity, where it is going. The orange arrow is gravity, always toward the centre. Watch this: gravity pulls across the direction of motion, and that sideways pull is exactly what curves a straight line into an orbit. Drag the speed slider and watch fall become circle become escape.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004));
     this.r0=1.04; this.launch=new THREE.Vector3(this.r0,0,0);
@@ -439,13 +439,13 @@ MODULES.push({
 MODULES.push({
   title:'Orbital plane, inclination, and the grid',
   camR:3.8,
-  explain:`<p>The grid on the globe fixes position. <span class="term">Latitude</span> is the angle north or south of the equator, from 0 degrees at the equator to 90 degrees at the poles; the bright line marks the equator. <span class="term">Longitude</span> is the angle east or west of the prime meridian, marked in orange. Together they locate any point on the surface.</p>
-  <p>A satellite's path lies in a flat <span class="term">orbital plane</span>, and that plane <b>contains the centre of the Earth</b>; it cannot be offset to one side, because gravity is directed at the centre. The tilt of the plane relative to the equator is the <span class="term">inclination</span>, i. At 0 degrees the orbit is equatorial. At 90 degrees it is polar and crosses both poles, which is why polar orbits are used for global imaging. The consequence is precise: a satellite at inclination i passes only over latitudes between plus and minus i. Inclination is therefore a ceiling on coverage. The point where the orbit crosses the equator heading north is the <span class="term">ascending node</span>.</p>`,
+  explain:`<p>The grid on the globe fixes position. Latitude is the angle north or south of the equator, running from 0 degrees at the equator to 90 degrees at the poles, and the bright line marks the equator. Longitude is the angle east or west of the prime meridian, marked in orange. Together they locate any point on the surface.</p>
+  <p>A satellite's path lies in a flat orbital plane, and that plane always contains the centre of the Earth. It cannot sit off to one side, because gravity is aimed at the centre. The tilt of that plane relative to the equator is the inclination. At 0 degrees the orbit hugs the equator. At 90 degrees it is polar and crosses both poles, which is why polar orbits are used to image the whole planet. The consequence is sharp. A satellite at a given inclination flies only over latitudes up to that angle, north and south, so inclination sets a ceiling on coverage. The point where the orbit crosses the equator heading north is called the ascending node, and the longitude of that crossing is the right ascension of the ascending node (RAAN).</p>`,
   eqs:[
     {tex:String.raw`|\,\varphi\,| \le i`, note:'A satellite at inclination i overflies only latitudes up to i.'},
     {tex:String.raw`\sin\varphi = \sin i \,\sin(\omega + \nu)`, note:'Ground point latitude as the satellite advances along the orbit.'}
   ],
-  narr:`First the grid. Latitude is your angle north or south of the equator, zero at the equator and ninety at the poles. The bright line is the equator. Longitude is your angle east or west of the prime meridian, the orange line. Together they pin any point on Earth. Now the orbit. A satellite's path lies in a flat orbital plane, and that plane must contain the centre of the Earth. It cannot sit off to one side, because gravity points at the centre, so the motion stays centred. The tilt of that plane against the equator is the inclination. At zero degrees, the orbit hugs the equator. At ninety degrees, it is polar, crossing both poles, which is ideal for mapping the whole planet. Here is the consequence worth remembering. A satellite at a given inclination only ever flies over latitudes up to that angle, north and south. Inclination is a ceiling on which parts of Earth you can pass over. The point where the orbit crosses the equator going north is called the ascending node. Drag the inclination slider and watch the plane tilt, and watch the coverage ceiling change with it.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004,0x2b6da3,30));
     this.R=1.45; this.inc=51.6; this.raan=0; this.orbit=new THREE.Group(); world.add(this.orbit);
@@ -471,14 +471,14 @@ MODULES.push({
 MODULES.push({
   title:'Why orbits are ellipses',
   camR:5.0,
-  explain:`<p>Solving Newton's gravity for a small body yields a <span class="term">conic section</span> in every case: a circle, an ellipse, a parabola, or a hyperbola. Every closed orbit is an <span class="term">ellipse</span> with the Earth at one <span class="term">focus</span>, not at the centre. The circle is the special case of zero <span class="term">eccentricity</span>.</p>
-  <p>Two numbers fix the shape. The <span class="term">semi-major axis</span> a sets the overall size, and the eccentricity e sets the elongation. The nearest point is <span class="term">perigee</span>, the farthest <span class="term">apogee</span>. This is Kepler's first law. His second law is the motion to watch: the satellite <b>accelerates toward perigee and slows toward apogee</b>, sweeping equal areas in equal time. It exchanges height for speed, in the same way a thrown ball moves fastest at the bottom of its arc. The speed at any radius follows from the vis-viva relation. Raise the eccentricity and observe the satellite race through the low pass and crawl at the high one.</p>`,
+  explain:`<p>Solving Newton's gravity for a small body always gives a conic section, namely a circle, an ellipse, a parabola, or a hyperbola. Every closed orbit is an ellipse with the Earth at one focus, not at the centre. A circle is just the special case where the eccentricity is zero.</p>
+  <p>Two numbers fix the shape. The semi-major axis sets the overall size, and the eccentricity sets how stretched the ellipse is. The nearest point is called perigee, the farthest apogee. That is Kepler's first law. His second law is the motion to watch. The satellite speeds up as it approaches perigee and slows as it climbs to apogee, sweeping equal areas in equal time. It trades height for speed, the same way a thrown ball moves fastest at the bottom of its arc. The exact speed at any distance comes from the vis viva relation shown below. Raise the eccentricity and watch the satellite race through the low pass and crawl at the high one.</p>`,
   eqs:[
     {tex:String.raw`r(\nu) = \frac{a\,(1-e^{2})}{1 + e\cos\nu}`, note:'Kepler\u2019s first law: the orbit is a conic with Earth at a focus.'},
     {tex:String.raw`v^{2} = GM\!\left(\frac{2}{r} - \frac{1}{a}\right)`, note:'Vis-viva: speed as a function of current radius and orbit size.'},
     {tex:String.raw`T = 2\pi\sqrt{\dfrac{a^{3}}{GM}}`, note:'Kepler\u2019s third law: period depends only on the semi-major axis.'}
   ],
-  narr:`Solve Newton's gravity for a small body, and the answer is always a conic section. A circle, an ellipse, a parabola, or a hyperbola. Every closed orbit is an ellipse, with the Earth sitting at one focus, not at the centre. A circle is just the special case where the stretch, the eccentricity, is zero. Two numbers fix the shape. The semi major axis sets the overall size, and the eccentricity sets how stretched it is. The nearest point is called perigee, the farthest apogee. That is Kepler's first law. His second law is the part to watch move. The satellite speeds up as it approaches perigee and slows as it climbs to apogee, sweeping equal areas in equal time. It trades height for speed, the same way a thrown ball is fastest at the bottom of its arc. The exact speed at any distance comes from the vis viva equation shown below. Raise the eccentricity slider, and watch the satellite race through the low pass and crawl at the top.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004));
     this.a=2.2; this.e=0.45; this.orbit=new THREE.Group(); world.add(this.orbit);
@@ -508,13 +508,13 @@ MODULES.push({
 MODULES.push({
   title:'Altitude regimes, and the Moon',
   camR:9,
-  explain:`<p>Orbits are classified by altitude. <span class="term">LEO</span> spans roughly <b>160 to 2,000 km</b>; the Space Station resides near 400 km and completes a revolution in about 90 minutes. <span class="term">MEO</span> holds the navigation constellations, with GPS near <b>20,200 km</b>. <span class="term">GEO</span> sits at exactly <b>35,786 km</b>, where the period equals one sidereal day, so the satellite holds station over a fixed longitude; this is why fixed ground antennas point at one part of the sky. Far beyond, the <span class="term">Moon</span> orbits at about <b>384,400 km</b>, near 60 Earth radii, the only natural satellite.</p>
-  <p>The difficulty is scale. Drawn truthfully, LEO is a thin shell against the surface and the Moon falls off the frame. Use the compressed view to bring every band onto one screen and compare ratios, then switch to true scale and zoom out to register the real emptiness of the gap. The satellite on the GEO ring stays fixed over one longitude as the Earth turns beneath it.</p>`,
+  explain:`<p>Orbits are sorted by altitude. Low Earth orbit, or LEO, runs from roughly 160 to 2,000 km, and the International Space Station (ISS) sits near 400 km, completing a lap in about 90 minutes. Medium Earth orbit, or MEO, holds the navigation fleets, with the Global Positioning System (GPS) near 20,200 km. Geostationary orbit, or GEO, sits at 35,786 km, where one lap takes a full day, so the satellite holds over a fixed spot on Earth. That is why a fixed dish points at one patch of sky and never moves. Far beyond all of it, the Moon orbits at about 384,400 km, near 60 Earth radii, as our only natural satellite.</p>
+  <p>The difficulty here is scale. Drawn truthfully, LEO is a thin shell against the surface and the Moon falls off the frame. Use the compressed view to bring every band onto one screen and compare the ratios, then switch to true scale and zoom out to feel how empty the gap really is. The satellite on the GEO ring stays locked over one longitude while the Earth turns beneath it.</p>`,
   eqs:[
     {tex:String.raw`T = 2\pi\sqrt{\dfrac{a^{3}}{GM}} \;\Rightarrow\; a_{\text{GEO}} = 42{,}164\ \text{km}`, note:'Set the period to one sidereal day and solve for the radius.'},
     {tex:String.raw`h_{\text{GEO}} = a_{\text{GEO}} - R_\oplus = 35{,}786\ \text{km}`, note:'Altitude above the surface follows by subtracting Earth\u2019s radius.'}
   ],
-  narr:`Orbits get sorted by altitude. Low Earth orbit runs roughly one hundred sixty to two thousand kilometres. The Space Station lives there near four hundred kilometres, completing a lap every ninety minutes. Medium Earth orbit holds the navigation fleets, with G P S near twenty thousand kilometres. Geostationary orbit sits at exactly thirty five thousand seven hundred eighty six kilometres, where one lap takes a full day, so the satellite holds over a fixed spot on Earth. That is why a fixed dish points at one patch of sky and never moves. Far beyond all of it, the Moon orbits at about three hundred eighty four thousand kilometres, near sixty Earth radii, our only natural satellite. The difficulty here is scale. Drawn truthfully, low orbit is a thin shell against the surface, and the Moon falls off the frame. Use the compressed view to bring every band onto one screen and compare the ratios. Then switch to true scale and zoom out to feel how empty that gap really is. The satellite on the geostationary ring stays locked over one longitude while the Earth turns beneath it.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004));
     this.compressed=true; this.showMoon=true; this.grp=new THREE.Group(); world.add(this.grp); this.rebuild();
@@ -541,14 +541,14 @@ MODULES.push({
 MODULES.push({
   title:'Launch sites, delta-v, and plane changes',
   camR:3.8,
-  explain:`<p>A given orbit cannot be reached from an arbitrary site. The orbital plane must contain both the centre of the Earth and the launch point, so <b>the minimum reachable inclination equals the launch latitude</b>. From the equator any inclination down to zero is attainable; from 45 degrees north, 45 degrees is the floor absent a costly correction. This is why equatorial sites such as Kourou are valued, and why lower latitude pads are preferred for equatorial missions.</p>
-  <p>Direction also matters. The Earth rotates eastward, contributing a free velocity of about <b>465 m/s</b> at the equator, scaled by the cosine of latitude. Launching east captures it, which is standard practice and also carries spent stages out over open ocean. The expensive operation is the <span class="term">plane change</span>: rotating the velocity vector by an angle costs delta-v proportional to the orbital speed itself. Near 7.7 km/s, even a 30 degree change consumes close to 4 km/s, frequently more than the climb to orbit. The plane is therefore chosen on the ground, not corrected in space.</p>`,
+  explain:`<p>You cannot reach any orbit from any spot on Earth. The orbital plane has to contain both the centre of the Earth and the launch site, so the lowest inclination you can reach equals your launch latitude. From the equator you can reach anything down to zero. From 45 degrees north, 45 degrees is the floor unless you pay for a costly correction later. That is why equatorial launch sites are prized, and why lower latitude pads are preferred for equatorial missions.</p>
+  <p>Direction matters too. The Earth already spins eastward, which hands you a free velocity of about 465 m per second at the equator, scaled down by the cosine of latitude. Launching east captures that bonus, which is standard, and it also sends spent stages out over open ocean. The expensive move is the plane change, where rotating the velocity vector by some angle costs a change in velocity, delta v, that grows with the orbital speed itself. Near 7.7 km per second, even a 30 degree turn burns close to 4 km per second, often more than the whole climb to orbit. So you choose the right plane on the ground, not in space.</p>`,
   eqs:[
     {tex:String.raw`i_{\min} = |\,\varphi_{\text{launch}}\,|`, note:'Minimum inclination is set by the launch latitude.'},
     {tex:String.raw`\Delta v_{\text{rot}} = 465\,\cos\varphi \ \ \mathrm{m/s}\ \ (\text{eastward})`, note:'The free contribution from Earth\u2019s rotation.'},
     {tex:String.raw`\Delta v_{\text{plane}} = 2\,v\,\sin\!\left(\frac{\Delta i}{2}\right)`, note:'Cost of rotating the orbital plane by an angle delta i.'}
   ],
-  narr:`You do not get to pick any orbit from any spot on Earth. The orbital plane has to contain both the centre of the Earth and your launch site. So the lowest inclination you can reach equals your launch latitude. Launch from the equator, and you can reach anything, all the way down to zero. Launch from forty five degrees north, and forty five degrees is your floor, unless you pay for an expensive correction later. That is why equatorial launch sites are prized. Direction matters too. The Earth already spins eastward, and that gives you a free velocity of about four hundred sixty five metres per second at the equator, scaled down by the cosine of your latitude. Launch eastward and you pocket that speed, which is the standard, and it also sends spent stages out over open ocean. The expensive operation is the plane change. Rotating your velocity vector by some angle costs delta v proportional to the orbital speed itself. Near seven point seven kilometres per second, even a thirty degree turn burns close to four kilometres per second, often more than the entire climb to orbit. So you choose the right plane on the ground, not in space. Drag the launch latitude and the target inclination, and watch the plane change cost appear the moment you ask for something below your floor.`,
+  narr:``,
   build(){
     world.add(makeEarth({})); world.add(graticule(1.004,0x2b6da3,30));
     this.lat=28.5; this.tgt=28.5; this.orbit=new THREE.Group(); world.add(this.orbit);
@@ -628,17 +628,14 @@ function bindCamera(){
 function hideHint(){ const h=document.getElementById('hint'); if(h)h.classList.remove('show'); }
 function resetView(){ cam.target.set(0,0,0); cam.r=active&&active.camR?active.camR:3.4; cam.theta=0.7; cam.phi=1.05; }
 
-/* ---- narration: neural audio files, with device-voice fallback ---- */
+/* ---- narration: neural audio files, reads the on-screen text, with device fallback ---- */
 const AUDIO=[
- "https://kappa.lol/vY35cD","https://kappa.lol/7ojp9i","https://kappa.lol/oAOjt6","https://kappa.lol/LPAMu6",
- "https://kappa.lol/8cFi2F","https://kappa.lol/Q8GP8b","https://kappa.lol/u9tQhR","https://kappa.lol/ZhrlG9"
+ "https://kappa.lol/TKL2Sv","https://kappa.lol/HY9sVi","https://kappa.lol/4Sod4Y","https://kappa.lol/9PfhdE",
+ "https://kappa.lol/n3l1xO","https://kappa.lol/3e4Phg","https://kappa.lol/UX2d5Q","https://kappa.lol/tc3xtr"
 ];
-let synth=window.speechSynthesis, voices=[], chosenVoice=null, rate=1, mode='neural', aud=null, devSpeaking=false, devPaused=false;
+let synth=window.speechSynthesis, voices=[], chosenVoice=null, rate=1, mode='neural', aud=null, audTimer=0, devSpeaking=false, devPaused=false;
+function narrOf(html){ const d=document.createElement('div'); d.innerHTML=html||''; return (d.textContent||'').replace(/\s+/g,' ').trim(); }
 function initNarration(){
-  aud=new Audio(); aud.preload='none';
-  try{ aud.preservesPitch=true; aud.mozPreservesPitch=true; aud.webkitPreservesPitch=true; }catch(e){}
-  aud.addEventListener('play',setPlayIcon); aud.addEventListener('pause',setPlayIcon); aud.addEventListener('ended',setPlayIcon);
-  aud.addEventListener('error',()=>{ if(mode==='neural'){ mode='device'; speakDevice(); } });
   function loadV(){ const all=synth?synth.getVoices():[]; voices=all.filter(v=>/^en/i.test(v.lang)); if(!voices.length)voices=all; populateVoices(); }
   if(synth){ loadV(); synth.onvoiceschanged=loadV; } else { populateVoices(); }
   document.getElementById('playbtn').onclick=toggleSpeak;
@@ -650,15 +647,30 @@ function populateVoices(){ const sel=document.getElementById('voiceSel'); if(!se
   let html='<option value="neural">Studio voice (neural)</option>';
   html+=voices.map((v,i)=>'<option value="dev:'+i+'">Device: '+v.name.replace(/\(.*?\)/,'').trim()+'</option>').join('');
   sel.innerHTML=html; sel.value=(mode==='neural')?'neural':sel.value; }
-function isPlaying(){ return (mode==='neural') ? (aud && !aud.paused && aud.currentTime>0 && !aud.ended) : (devSpeaking && !devPaused); }
-function setPlayIcon(){ const b=document.getElementById('playbtn'); if(b) b.innerHTML = isPlaying()?'&#10073;&#10073;':'&#9658;'; }
+function neuralOn(){ return !!(aud && !aud.paused && !aud.ended); }
+function setPlayIcon(){ const b=document.getElementById('playbtn'); if(!b)return;
+  const playing=(mode==='neural')?neuralOn():(devSpeaking && !devPaused); b.innerHTML = playing?'&#10073;&#10073;':'&#9658;'; }
+function startNeural(){
+  if(!AUDIO[idx]){ mode='device'; speakDevice(); return; }
+  if(aud){ try{aud.pause();}catch(e){} }
+  clearTimeout(audTimer);
+  aud=new Audio(); aud.preload='auto'; aud.src=AUDIO[idx]; aud.setAttribute('data-i',String(idx));
+  try{ aud.preservesPitch=true; aud.mozPreservesPitch=true; aud.webkitPreservesPitch=true; }catch(e){}
+  aud.playbackRate=rate;
+  aud.addEventListener('playing',()=>{ clearTimeout(audTimer); setPlayIcon(); });
+  aud.addEventListener('pause',setPlayIcon);
+  aud.addEventListener('ended',setPlayIcon);
+  aud.addEventListener('error',()=>{ clearTimeout(audTimer); if(mode==='neural'){ mode='device'; speakDevice(); } });
+  audTimer=setTimeout(()=>{ if(!aud||aud.paused||aud.readyState<3){ try{aud&&aud.pause();}catch(e){} if(mode==='neural'){ mode='device'; speakDevice(); } } },6500);
+  aud.load();
+  const p=aud.play(); if(p&&p.catch)p.catch(()=>{ clearTimeout(audTimer); if(mode==='neural'){ mode='device'; speakDevice(); } });
+  setPlayIcon();
+}
 function toggleSpeak(){
   if(mode==='neural'){
-    if(!AUDIO[idx]){ mode='device'; speakDevice(); return; }
-    if(aud.paused){ if(aud.getAttribute('data-i')!==String(idx)){ aud.src=AUDIO[idx]; aud.setAttribute('data-i',String(idx)); aud.playbackRate=rate; }
-      aud.playbackRate=rate; aud.play().catch(()=>{ mode='device'; speakDevice(); }); }
-    else { aud.pause(); }
-    setPlayIcon();
+    if(neuralOn()){ aud.pause(); setPlayIcon(); }
+    else if(aud && aud.currentTime>0 && !aud.ended && aud.getAttribute('data-i')===String(idx)){ aud.play(); setPlayIcon(); }
+    else { startNeural(); }
   } else {
     if(devSpeaking&&!devPaused){ synth.pause(); devPaused=true; }
     else if(devSpeaking&&devPaused){ synth.resume(); devPaused=false; }
@@ -666,10 +678,10 @@ function toggleSpeak(){
     setPlayIcon();
   }
 }
-function speakDevice(){ if(!synth){ return; } synth.cancel(); const u=new SpeechSynthesisUtterance(MODULES[idx].narr);
+function speakDevice(){ if(!synth){ return; } synth.cancel(); const u=new SpeechSynthesisUtterance(narrOf(MODULES[idx].explain));
   if(chosenVoice)u.voice=chosenVoice; u.rate=rate; u.onend=()=>{devSpeaking=false;devPaused=false;setPlayIcon();}; u.onerror=()=>{devSpeaking=false;devPaused=false;setPlayIcon();};
   synth.speak(u); devSpeaking=true; devPaused=false; setPlayIcon(); }
-function stopNarration(){ if(aud){ aud.pause(); try{aud.currentTime=0;}catch(e){} aud.removeAttribute('data-i'); } if(synth)synth.cancel(); devSpeaking=false; devPaused=false; setPlayIcon(); }
+function stopNarration(){ clearTimeout(audTimer); if(aud){ try{aud.pause();}catch(e){} aud.removeAttribute('data-i'); } if(synth)synth.cancel(); devSpeaking=false; devPaused=false; setPlayIcon(); }
 
 /* ---- module navigation + UI ---- */
 function renderEqs(list){
