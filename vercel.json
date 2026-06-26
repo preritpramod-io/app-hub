@@ -1,35 +1,16 @@
 {
   "redirects": [
-    {
-      "source": "/",
-      "destination": "/activities/defence/india/",
-      "statusCode": 302
-    }
+    { "source": "/", "destination": "/activities/defence/india/", "statusCode": 302 }
   ],
   "rewrites": [
-    {
-      "source": "/activities/defence/india",
-      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india"
-    },
-    {
-      "source": "/activities/defence/india/",
-      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/"
-    },
-    {
-      "source": "/activities/defence/india/(.*)",
-      "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/$1"
-    },
-    {
-      "source": "/study/astrodynamics",
-      "destination": "/study/astrodynamics/index.html"
-    },
-    {
-      "source": "/study/astrodynamics/",
-      "destination": "/study/astrodynamics/index.html"
-    },
-    {
-      "source": "/study/astrodynamics/(.*)",
-      "destination": "/study/astrodynamics/index.html"
-    }
+    { "source": "/activities/defence/india", "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india" },
+    { "source": "/activities/defence/india/", "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/" },
+    { "source": "/activities/defence/india/(.*)", "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/$1" },
+    { "source": "/study/astrodynamics", "destination": "/study/astrodynamics/index.html" },
+    { "source": "/study/astrodynamics/", "destination": "/study/astrodynamics/index.html" },
+    { "source": "/study/astrodynamics/(.*)", "destination": "/study/astrodynamics/index.html" },
+    { "source": "/tools/valuation", "destination": "/tools/valuation/index.html" },
+    { "source": "/tools/valuation/", "destination": "/tools/valuation/index.html" },
+    { "source": "/tools/valuation/(.*)", "destination": "/tools/valuation/index.html" }
   ]
 }
