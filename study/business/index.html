@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Multiscale Space Systems, Business</title>
+<style>
+  :root{
+    --bg:#06101f; --bg2:#0a1830; --panel:#0e1c33; --panel2:#0c1830;
+    --ink:#e8eef7; --muted:#93a3bd; --line:#1c2c47; --gold:#c8a85a; --gold-soft:rgba(200,168,90,0.14);
+    --blue:#5aa0e0; --green:#6ad29a; --warn:#e0875a; --red:#e06a6a;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#10254a 0%,var(--bg) 60%);color:var(--ink);font-family:var(--sans);line-height:1.6}
+  a{color:inherit;text-decoration:none}
+
+  /* tab bar */
+  #tabs{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:2px;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:rgba(6,16,31,0.86);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  #brand{display:flex;align-items:center;gap:9px;margin-right:8px;min-width:0}
+  #brand svg{flex:0 0 auto}
+  #brand .wm{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;color:var(--muted);white-space:nowrap;text-transform:uppercase}
+  #brand .wm b{color:var(--ink);font-weight:600}
+  .tab{font-family:var(--mono);font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);
+    padding:8px 12px;border-radius:9px;border:1px solid transparent;white-space:nowrap}
+  .tab.active{color:var(--gold);border-color:var(--line);background:var(--gold-soft)}
+  .tab.soon{opacity:0.5}
+  .tab.soon::after{content:" soon";font-size:8px;color:var(--muted);letter-spacing:0.1em}
+  .spacer{flex:1}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:18px 16px 80px}
+
+  header.page{padding:18px 2px 6px}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.26em;text-transform:uppercase;color:var(--gold)}
+  header.page h1{margin:6px 0 4px;font-size:26px;letter-spacing:0.01em;font-weight:650}
+  header.page .lede{color:var(--muted);font-size:15px;max-width:60ch}
+  .updated{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:0.04em}
+
+  section{margin-top:22px}
+  .sh{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+  .sh .n{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:0.1em}
+  .sh h2{margin:0;font-size:16px;font-weight:650;letter-spacing:0.02em}
+  .sh .s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto;letter-spacing:0.08em}
+
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:16px 16px}
+  .grid{display:grid;gap:12px}
+  @media(min-width:760px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}}
+  p{margin:0 0 10px}
+  p:last-child{margin-bottom:0}
+  .muted{color:var(--muted)}
+  b,strong{color:#fff;font-weight:600}
+  .gold{color:var(--gold)}
+
+  .stat{display:flex;flex-direction:column;gap:2px}
+  .stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-size:15px;font-weight:600}
+  .statrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(min-width:620px){.statrow{grid-template-columns:repeat(4,1fr)}}
+
+  ul.clean{margin:6px 0 0;padding-left:18px}
+  ul.clean li{margin:0 0 6px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;padding:3px 8px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);margin:0 6px 6px 0}
+  .tag.gold{color:var(--gold);border-color:rgba(200,168,90,0.4);background:var(--gold-soft)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  td .pill{font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:999px;white-space:nowrap}
+  .p-live{color:var(--green);background:rgba(106,210,154,0.12)}
+  .p-hold{color:var(--warn);background:rgba(224,135,90,0.12)}
+  .p-closed{color:var(--muted);background:rgba(147,163,189,0.1)}
+  .p-lead{color:var(--gold);background:var(--gold-soft)}
+  .num{font-family:var(--mono);white-space:nowrap}
+
+  /* timeline */
+  .tl{position:relative;margin:4px 0 0;padding-left:20px}
+  .tl::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tl .item{position:relative;padding:0 0 16px}
+  .tl .item:last-child{padding-bottom:0}
+  .tl .item::before{content:"";position:absolute;left:-17px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--bg);border:2px solid var(--gold)}
+  .tl .item.done::before{background:var(--gold)}
+  .tl .item.next::before{border-color:var(--blue)}
+  .tl .t{font-weight:600;font-size:14px}
+  .tl .meta{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.04em;margin-top:1px}
+  .tl .d{color:var(--muted);font-size:13px;margin-top:3px}
+
+  .stagebar{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}
+  .stagebar .st{flex:1 1 120px;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--panel2)}
+  .stagebar .st .lab{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold)}
+  .stagebar .st .nm{font-size:13px;font-weight:600;margin-top:2px}
+  .stagebar .st .ds{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+  .note{font-family:var(--mono);font-size:10.5px;color:var(--muted);border-left:2px solid var(--gold);padding:6px 0 6px 12px;margin-top:12px;letter-spacing:0.02em}
+  .placeholder{border:1px dashed rgba(200,168,90,0.4);border-radius:10px;padding:11px 13px;background:var(--gold-soft)}
+  .placeholder .ph{font-family:var(--mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.04em}
+</style>
+</head>
+<body>
+
+<div id="tabs">
+  <a id="brand" href="#top">
+    <svg width="22" height="22" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="18" stroke="#c8a85a" stroke-width="1.4"/>
+      <ellipse cx="20" cy="20" rx="17" ry="7" stroke="#5aa0e0" stroke-width="1.1" transform="rotate(-28 20 20)"/>
+      <circle cx="20" cy="20" r="5.2" fill="#c8a85a"/>
+    </svg>
+    <span class="wm"><b>MSS</b> &middot; Multiscale Space Systems</span>
+  </a>
+  <span class="spacer"></span>
+  <a class="tab" href="/study/astrodynamics">Training</a>
+  <a class="tab soon" href="/study/product">Product</a>
+  <a class="tab active" href="/study/business">Business</a>
+</div>
+
+<div class="wrap" id="top">
+
+  <header class="page">
+    <div class="eyebrow">Business</div>
+    <h1>The intelligent layer for orbital return</h1>
+    <div class="lede">Multiscale Space Systems is building the system that brings cargo back from space on command, with precision and at scale, rather than burning up or splashing down at the mercy of ballistics.</div>
+    <div class="updated">Working planning surface &middot; internal &amp; partner facing &middot; figures marked PLANNING are scaffolding to set together</div>
+  </header>
+
+  <section>
+    <div class="card">
+      <div class="statrow">
+        <div class="stat"><div class="k">Stage</div><div class="v">Pre-seed, pre-flight</div></div>
+        <div class="stat"><div class="k">Maturity</div><div class="v">TRL 1 to 3</div></div>
+        <div class="stat"><div class="k">Team</div><div class="v">2 founders</div></div>
+        <div class="stat"><div class="k">Base</div><div class="v">Redmond, WA</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">01</span><h2>Company</h2></div>
+    <div class="card">
+      <p>Multiscale Space Systems LLC is a deep technology venture founded in 2026, structured as a joint venture between two founders. Prerit Pramod is Co-Founder and Chief Technology Officer, leading estimation, control, embedded and power electronics, and overall systems architecture. Shardul Singh Panwar is Co-Founder and Chief Executive Officer, leading aeroshell hardware, aerothermal and structural analysis, and business development.</p>
+      <p class="muted">The company operates today as a Delaware limited liability company. A conversion to a Delaware C corporation is the expected step ahead of priced investment instruments, and several accelerator programs already flag that conversion as a precondition for their funding.</p>
+      <div style="margin-top:10px">
+        <span class="tag gold">multiscalespacesystems.com</span>
+        <span class="tag">Full time</span>
+        <span class="tag">Joint venture</span>
+        <span class="tag">Deep tech hardware</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">02</span><h2>Thesis and market</h2></div>
+    <div class="grid g2">
+      <div class="card">
+        <p><b>The gap.</b> The last two decades reshaped the cost of reaching orbit. The next decade belongs to whoever can close the loop and bring value back down to the ground with precision and at scale. That return path is the open gap in the space economy, and it is the one Multiscale Space Systems is built to fill.</p>
+        <p><b>The model.</b> The company sells the recoverability layer, the subsystem that lets a third party spacecraft come home under control, rather than a full capsule service. The return capability becomes a software defined service that other vehicles build on.</p>
+      </div>
+      <div class="card">
+        <p class="muted" style="margin-bottom:8px"><b class="gold">Where controlled return matters first</b></p>
+        <ul class="clean">
+          <li><b>In space manufacturing recovery.</b> Bringing materials and products made in orbit back to a chosen site intact.</li>
+          <li><b>Recoverable orbital experimentation.</b> Flying an experiment and returning the hardware and the data.</li>
+          <li><b>Hypersonic flight test.</b> A controllable, recoverable platform through the hypersonic regime.</li>
+          <li><b>Defense return platforms.</b> Responsive, precise return of assets for national security users.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">03</span><h2>What we own</h2><span class="s">the full reentry stack as IP</span></div>
+    <div class="card">
+      <p>The core technology is a morphing deployable aeroshell, an electromechanically actuated structure that serves as both the vehicle's thermal protection and its aerodynamic control surface at the same time. By reshaping the body of the vehicle in flight, the descent is steered through the hypersonic regime using onboard guidance and control rather than chemical thrusters, which removes the propellant, the plumbing, and much of the cost and failure surface that have kept controlled reentry expensive and rare.</p>
+      <p>Multiscale Space Systems is an integrated systems company. Where most of the field specializes in one slice of the descent, the company treats reentry as a single coupled problem spanning structures, aerothermodynamics, actuation, power, and real-time control, and it owns that full stack as intellectual property. The aeroshell is the enabler. The coupled control of the deforming body and the fault tolerant electromechanical, power, and energy system that the control depends on are the invention.</p>
+      <div class="stagebar">
+        <div class="st"><div class="lab">Stage 0</div><div class="nm">Passive</div><div class="ds">Deployable shell, open loop</div></div>
+        <div class="st"><div class="lab">Stage 1</div><div class="nm">Active symmetric</div><div class="ds">Feed forward braking</div></div>
+        <div class="st"><div class="lab">Stage 2</div><div class="nm">Active asymmetric</div><div class="ds">Two channels, steering moment</div></div>
+        <div class="st"><div class="lab">Stage 3</div><div class="nm">Feedback</div><div class="ds">Sensors, estimators, closed loop</div></div>
+      </div>
+      <div class="note">Each stage is a strict superset of the one before it. The build climbs from a passive deployable shield to a fully closed loop controllable return vehicle, one provable increment at a time.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">04</span><h2>Intellectual property strategy</h2><span class="s">IP first</span></div>
+    <div class="card">
+      <p>The current strategy is IP first. Prerit generates a patent portfolio covering the full reentry vehicle system stack while Shardul runs the raise and the partnership outreach. The inventive locus is the specific control strategy and how petal angle commands translate, through closed loop position control, into commanded vehicle dynamics, together with the electromechanical, power, and fault tolerant systems that make that control real.</p>
+      <p class="muted">Filing discipline works hardware side up and files broad genus level independent claims first, then narrows. Three inventions are on record with anchors, and the portfolio is mapped against a prior art wall built from the closest deployable and control adjacent work.</p>
+      <div class="placeholder" style="margin-top:10px">
+        <div class="ph">Planning</div>
+        Target first filings, claim families, and the patent coverage map across the architecture block diagram are the next IP artifacts. The coverage map doubles as the lead diagram for partner conversations.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">05</span><h2>Funding pipeline</h2><span class="s">posture by program</span></div>
+    <div class="card" style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Program</th><th>Instrument or stage</th><th>Posture</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td><b>Starburst Aerospace</b></td><td>Accelerator, partner and capital</td><td><span class="pill p-lead">Lead</span></td><td>Primary funding target. Lead artifact is the architecture block diagram with patent coverage zones.</td></tr>
+          <tr><td><b>HBS Foundry Bootcamp</b></td><td>Program, July 2026</td><td><span class="pill p-live">Active</span></td><td>Accepted. Runs July 1 to 30, 2026. Focus is capital strategy and first partnership.</td></tr>
+          <tr><td>NSF SBIR Phase I</td><td>NSF 26-510, non dilutive</td><td><span class="pill p-closed">Open thread</span></td><td>Phase I up to about 305,000 dollars. Prior pitch not selected. Resubmission or continuation is not ruled out.</td></tr>
+          <tr><td>Google for Startups</td><td>Program</td><td><span class="pill p-hold">Intelligence</span></td><td>Meeting held. Treated as low cost signal.</td></tr>
+          <tr><td>DARPA ERIS</td><td>DARPA-PS-25-05, OTA marketplace</td><td><span class="pill p-hold">Hold</span></td><td>Buy now marketplace, early for current maturity. Monitor, commit nothing.</td></tr>
+          <tr><td>Techstars Space</td><td>20k for 5 percent plus 200k SAFE</td><td><span class="pill p-closed">Intelligence</span></td><td>Space Force and JPL partnership. Treated as zero expectation intelligence.</td></tr>
+          <tr><td>Y Combinator</td><td>Summer 2026</td><td><span class="pill p-closed">Declined</span></td><td>Application declined with a top ten percent note.</td></tr>
+        </tbody>
+      </table>
+      <div class="note">Biggest roadblock, stated plainly. Capital sequencing for a deep tech hardware company. The technology and the IP are strong; translating that depth into the right first capital and the right first program partner, in the correct order, is what unlocks everything else.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">06</span><h2>Milestones and roadmap</h2><span class="s">to work with Shardul</span></div>
+    <div class="card">
+      <div class="tl">
+        <div class="item done"><div class="t">Architecture and control conventions locked</div><div class="meta">Done &middot; Q2 2026</div><div class="d">Four stage build defined, plant and control decomposition fixed, base system documented.</div></div>
+        <div class="item done"><div class="t">IP campaign opened</div><div class="meta">Done &middot; Q2 2026</div><div class="d">Three inventions on record, prior art wall built, IP first pivot agreed with Shardul.</div></div>
+        <div class="item next"><div class="t">Raise and first partner</div><div class="meta">Next &middot; Q3 2026</div><div class="d">Patent coverage map and architecture diagram into Starburst Aerospace. HBS Foundry in July. Convert to Delaware C corporation ahead of priced instruments.</div></div>
+        <div class="item"><div class="t">Phase I trade studies</div><div class="meta">Planned</div><div class="d">Panel to fabric ratio, seam integrity, half rib thermal protection, and control authority magnitude resolved as explicit studies.</div></div>
+        <div class="item"><div class="t">Stage 1 and 2 actuation demonstration</div><div class="meta">Planned</div><div class="d">Symmetric then asymmetric morphing on the bench, two channels, measured authority.</div></div>
+        <div class="item"><div class="t">Stage 3 closed loop and flight path</div><div class="meta">Planned</div><div class="d">Sensors, estimators, nested loops, then a path toward a recoverable test article.</div></div>
+      </div>
+      <div class="placeholder" style="margin-top:12px">
+        <div class="ph">Planning</div>
+        Dates, owners, and gate criteria on the planned milestones are the live worksheet to fill in together. This section is built to become the shared milestone plan, not a finished one.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">07</span><h2>Team and headcount</h2><span class="s">resource plan</span></div>
+    <div class="card" style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Role</th><th>Owner</th><th>Scope</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>CTO, controls and systems</td><td><b>Prerit Pramod</b></td><td>Estimation, control, embedded and power electronics, systems architecture, IP.</td><td><span class="pill p-live">Founder</span></td></tr>
+          <tr><td>CEO, structures and BD</td><td><b>Shardul Singh Panwar</b></td><td>Aeroshell hardware, aerothermal and structural analysis, business development, raise.</td><td><span class="pill p-live">Founder</span></td></tr>
+          <tr><td>Mechanisms and test engineer</td><td class="muted">Open</td><td>Actuator integration, deployment and morphing rig, bench test.</td><td><span class="pill p-closed">Planned hire 1</span></td></tr>
+          <tr><td>Embedded and power engineer</td><td class="muted">Open</td><td>Motor drive, power electronics, real-time firmware, fault handling.</td><td><span class="pill p-closed">Planned hire 2</span></td></tr>
+          <tr><td>Aerothermal and CFD analyst</td><td class="muted">Open</td><td>Aerothermal loads, trajectory, structural margins.</td><td><span class="pill p-closed">Planned hire 3</span></td></tr>
+        </tbody>
+      </table>
+      <div class="placeholder" style="margin-top:10px">
+        <div class="ph">Planning</div>
+        Hire timing is tied to the raise. The order above reflects the build, mechanisms and embedded first to stand up Stage 1 and 2, analysis support alongside. Full time equivalent loading per quarter is the next number to set against the funding plan.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">08</span><h2>Use of funds</h2><span class="s">financial plan</span></div>
+    <div class="card">
+      <p class="muted">A pre-seed round is sized to carry the company from architecture and IP to a demonstrated Stage 1 and 2 actuation result, the milestone that de-risks the core claim and unlocks the next raise. The buckets below are the planning frame to fill with real numbers.</p>
+      <div class="grid g3" style="margin-top:6px">
+        <div class="card" style="background:var(--panel2)"><div class="stat"><div class="k">People</div><div class="v gold">Largest</div></div><p class="muted" style="margin-top:6px;font-size:12.5px">Two founders plus the first two to three hires that build the demonstrator.</p></div>
+        <div class="card" style="background:var(--panel2)"><div class="stat"><div class="k">Hardware and test</div><div class="v gold">Build</div></div><p class="muted" style="margin-top:6px;font-size:12.5px">Actuators, structures, instrumentation, and the deployment and morphing rig.</p></div>
+        <div class="card" style="background:var(--panel2)"><div class="stat"><div class="k">IP and runway</div><div class="v gold">Protect</div></div><p class="muted" style="margin-top:6px;font-size:12.5px">Patent filings across the stack, entity conversion, and operating runway.</p></div>
+      </div>
+      <div class="placeholder" style="margin-top:12px">
+        <div class="ph">Planning</div>
+        Round size, monthly burn, runway in months, and the split across the three buckets are placeholders to set together. Non dilutive sources such as NSF SBIR reduce the dilutive ask for the same milestone.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">09</span><h2>Valuation</h2><span class="s">subsection &middot; placeholder</span></div>
+    <div class="card">
+      <p class="muted">Valuation at pre-seed and pre-flight is driven by the strength of the team, the size of the return gap, and the defensibility of the IP, far more than by current revenue, which is zero by design at this stage.</p>
+      <div class="grid g2" style="margin-top:8px">
+        <div class="card" style="background:var(--panel2)">
+          <p style="margin-bottom:6px"><b class="gold">Value drivers</b></p>
+          <ul class="clean">
+            <li>Ownership of the full reentry stack as IP, not a single component.</li>
+            <li>An integrated systems moat that is hard to assemble piecemeal.</li>
+            <li>A large, structurally open market, controlled return, with few credible entrants.</li>
+            <li>A founder with a deep safety critical control and power electronics track record.</li>
+          </ul>
+        </div>
+        <div class="card" style="background:var(--panel2)">
+          <p style="margin-bottom:6px"><b class="gold">Reference points</b></p>
+          <ul class="clean">
+            <li class="muted">Accelerator instruments seen so far are standard, for example a small common stock check plus an uncapped most favored nation SAFE, which set a floor rather than a true priced valuation.</li>
+            <li class="muted">A priced number waits for the first program partner and the entity conversion.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="placeholder" style="margin-top:12px">
+        <div class="ph">Placeholder, to set with Prerit</div>
+        Target pre-money, round size, instrument, and the resulting cap table are intentionally left open here. This subsection is the holder for the valuation work that lives in a separate thread; drop the numbers in and this becomes the live valuation view.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Multiscale Space Systems LLC &middot; Business &middot; built within the external scope boundary &middot; confidential planning surface
+  </footer>
+
+</div>
+
+<script>
+  // smooth scroll for the brand anchor; tabs are real links to the other pages
+  document.getElementById('brand').addEventListener('click',function(e){
+    e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'});
+  });
+</script>
+</body>
+</html>
