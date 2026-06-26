@@ -628,30 +628,48 @@ function bindCamera(){
 function hideHint(){ const h=document.getElementById('hint'); if(h)h.classList.remove('show'); }
 function resetView(){ cam.target.set(0,0,0); cam.r=active&&active.camR?active.camR:3.4; cam.theta=0.7; cam.phi=1.05; }
 
-/* ---- narration (Web Speech API) ---- */
-let synth=window.speechSynthesis, voices=[], chosenVoice=null, rate=1, speaking=false, paused=false;
+/* ---- narration: neural audio files, with device-voice fallback ---- */
+const AUDIO=[
+ "https://kappa.lol/vY35cD","https://kappa.lol/7ojp9i","https://kappa.lol/oAOjt6","https://kappa.lol/LPAMu6",
+ "https://kappa.lol/8cFi2F","https://kappa.lol/Q8GP8b","https://kappa.lol/u9tQhR","https://kappa.lol/ZhrlG9"
+];
+let synth=window.speechSynthesis, voices=[], chosenVoice=null, rate=1, mode='neural', aud=null, devSpeaking=false, devPaused=false;
 function initNarration(){
-  function load(){ const all=synth?synth.getVoices():[]; voices=all.filter(v=>/^en/i.test(v.lang));
-    if(!voices.length)voices=all; populateVoices(); }
-  if(synth){ load(); synth.onvoiceschanged=load; }
-  const pb=document.getElementById('playbtn'); pb.onclick=toggleSpeak;
-  document.getElementById('voiceSel').onchange=e=>{ chosenVoice=voices[e.target.value]||null; if(speaking)restartSpeak(); };
-  document.getElementById('rateSel').onchange=e=>{ rate=parseFloat(e.target.value); if(speaking)restartSpeak(); };
-  if(!synth){ pb.style.opacity=0.4; document.getElementById('voiceSel').innerHTML='<option>no TTS</option>'; }
+  aud=new Audio(); aud.preload='none';
+  try{ aud.preservesPitch=true; aud.mozPreservesPitch=true; aud.webkitPreservesPitch=true; }catch(e){}
+  aud.addEventListener('play',setPlayIcon); aud.addEventListener('pause',setPlayIcon); aud.addEventListener('ended',setPlayIcon);
+  aud.addEventListener('error',()=>{ if(mode==='neural'){ mode='device'; speakDevice(); } });
+  function loadV(){ const all=synth?synth.getVoices():[]; voices=all.filter(v=>/^en/i.test(v.lang)); if(!voices.length)voices=all; populateVoices(); }
+  if(synth){ loadV(); synth.onvoiceschanged=loadV; } else { populateVoices(); }
+  document.getElementById('playbtn').onclick=toggleSpeak;
+  document.getElementById('voiceSel').onchange=e=>{ stopNarration(); const v=e.target.value;
+    if(v==='neural'){ mode='neural'; } else { mode='device'; chosenVoice=voices[parseInt(v.slice(4))]||null; } };
+  document.getElementById('rateSel').onchange=e=>{ rate=parseFloat(e.target.value); if(aud)aud.playbackRate=rate; if(devSpeaking)speakDevice(); };
 }
 function populateVoices(){ const sel=document.getElementById('voiceSel'); if(!sel)return;
-  sel.innerHTML=voices.map((v,i)=>'<option value="'+i+'">'+v.name.replace(/\(.*?\)/,'').trim()+'</option>').join('');
-  if(!chosenVoice&&voices.length){ const pref=voices.findIndex(v=>/Samantha|Google US|Daniel|Karen|Aaron/i.test(v.name)); const k=pref>=0?pref:0; chosenVoice=voices[k]; sel.value=k; } }
-function setPlayIcon(){ document.getElementById('playbtn').innerHTML = (speaking&&!paused)?'&#10073;&#10073;':'&#9658;'; }
-function speakCurrent(){ if(!synth)return; synth.cancel(); const u=new SpeechSynthesisUtterance(MODULES[idx].narr);
-  if(chosenVoice)u.voice=chosenVoice; u.rate=rate; u.onend=()=>{speaking=false;paused=false;setPlayIcon();}; u.onerror=()=>{speaking=false;paused=false;setPlayIcon();};
-  synth.speak(u); speaking=true; paused=false; setPlayIcon(); }
-function restartSpeak(){ if(synth&&speaking){ speakCurrent(); } }
-function toggleSpeak(){ if(!synth)return;
-  if(speaking&&!paused){ synth.pause(); paused=true; }
-  else if(speaking&&paused){ synth.resume(); paused=false; }
-  else { speakCurrent(); } setPlayIcon(); }
-function stopSpeak(){ if(synth)synth.cancel(); speaking=false; paused=false; setPlayIcon(); }
+  let html='<option value="neural">Studio voice (neural)</option>';
+  html+=voices.map((v,i)=>'<option value="dev:'+i+'">Device: '+v.name.replace(/\(.*?\)/,'').trim()+'</option>').join('');
+  sel.innerHTML=html; sel.value=(mode==='neural')?'neural':sel.value; }
+function isPlaying(){ return (mode==='neural') ? (aud && !aud.paused && aud.currentTime>0 && !aud.ended) : (devSpeaking && !devPaused); }
+function setPlayIcon(){ const b=document.getElementById('playbtn'); if(b) b.innerHTML = isPlaying()?'&#10073;&#10073;':'&#9658;'; }
+function toggleSpeak(){
+  if(mode==='neural'){
+    if(!AUDIO[idx]){ mode='device'; speakDevice(); return; }
+    if(aud.paused){ if(aud.getAttribute('data-i')!==String(idx)){ aud.src=AUDIO[idx]; aud.setAttribute('data-i',String(idx)); aud.playbackRate=rate; }
+      aud.playbackRate=rate; aud.play().catch(()=>{ mode='device'; speakDevice(); }); }
+    else { aud.pause(); }
+    setPlayIcon();
+  } else {
+    if(devSpeaking&&!devPaused){ synth.pause(); devPaused=true; }
+    else if(devSpeaking&&devPaused){ synth.resume(); devPaused=false; }
+    else { speakDevice(); }
+    setPlayIcon();
+  }
+}
+function speakDevice(){ if(!synth){ return; } synth.cancel(); const u=new SpeechSynthesisUtterance(MODULES[idx].narr);
+  if(chosenVoice)u.voice=chosenVoice; u.rate=rate; u.onend=()=>{devSpeaking=false;devPaused=false;setPlayIcon();}; u.onerror=()=>{devSpeaking=false;devPaused=false;setPlayIcon();};
+  synth.speak(u); devSpeaking=true; devPaused=false; setPlayIcon(); }
+function stopNarration(){ if(aud){ aud.pause(); try{aud.currentTime=0;}catch(e){} aud.removeAttribute('data-i'); } if(synth)synth.cancel(); devSpeaking=false; devPaused=false; setPlayIcon(); }
 
 /* ---- module navigation + UI ---- */
 function renderEqs(list){
@@ -666,7 +684,7 @@ function renderEqs(list){
 }
 function loadModule(i){
   idx=Math.max(0,Math.min(MODULES.length-1,i)); active=MODULES[idx];
-  stopSpeak(); cam.rMin=1.16; cam.rMax=320; resetView();
+  stopNarration(); cam.rMin=1.16; cam.rMax=320; resetView();
   disposeGroup(world); setRail('',[]);
   document.getElementById('mtitle').textContent=active.title;
   document.getElementById('explain').innerHTML=active.explain;
