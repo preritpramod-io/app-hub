@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspired Autonomy — Live Architecture</title>
+<style>
+  :root{
+    --bg:#05070d; --ink:#e9eef7; --muted:#8a97ad;
+    --zone:#7c5cff; --auth:#ff5c8a; --tools:#27e0c4; --device:#ffb547; --storage:#4aa8ff; --line:#23304a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;overflow:hidden}
+  #c{position:fixed;inset:0;display:block}
+  .ui{position:fixed;pointer-events:none;z-index:5}
+  #top{top:26px;left:30px;}
+  #top h1{font-size:21px;font-weight:700;letter-spacing:.3px}
+  #top h1 b{color:var(--zone)}
+  #top p{color:var(--muted);font-size:12.5px;margin-top:5px;max-width:430px;line-height:1.5}
+  #legend{bottom:26px;left:30px;display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+  #legend .k{display:flex;align-items:center;gap:7px}
+  #legend .d{width:10px;height:10px;border-radius:3px;box-shadow:0 0 10px currentColor}
+  #flow{top:26px;right:30px;width:300px;background:rgba(12,17,28,.72);border:1px solid #1c2740;border-radius:14px;padding:16px 18px;backdrop-filter:blur(8px)}
+  #flow h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--tools);margin-bottom:11px}
+  #flow .step{font-size:12.5px;color:var(--muted);padding:6px 0;display:flex;gap:9px;align-items:flex-start;transition:.3s;line-height:1.4}
+  #flow .step .n{width:18px;height:18px;border-radius:50%;border:1px solid #2c3a59;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted)}
+  #flow .step.on{color:var(--ink)}
+  #flow .step.on .n{background:var(--tools);border-color:var(--tools);color:#04201c;font-weight:700}
+  #hint{bottom:26px;right:30px;color:var(--muted);font-size:11px;text-align:right;line-height:1.6}
+  .tag{display:inline-block;margin-top:9px;font-size:10.5px;color:var(--tools);border:1px solid #1c3b38;border-radius:20px;padding:3px 10px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="ui" id="top">
+  <h1><b>Inspired Autonomy</b> &nbsp;·&nbsp; live architecture</h1>
+  <p>A swappable mind given a real body of connectors, devices, storage, and one secure door. Operated from a single seat, Inspired Zone. Owned by Prerit, not a vendor.</p>
+  <span class="tag" id="tag">tools.preritpramod.com &nbsp;|&nbsp; auth.preritpramod.com</span>
+</div>
+<div class="ui" id="flow">
+  <h2>Temporal flow of one call</h2>
+  <div class="step" data-s="0"><span class="n">1</span><span>The seat issues a request from Inspired Zone.</span></div>
+  <div class="step" data-s="1"><span class="n">2</span><span>auth. checks the bearer the one secure door issued.</span></div>
+  <div class="step" data-s="2"><span class="n">3</span><span>tools. routes it to the named provider, account explicit.</span></div>
+  <div class="step" data-s="3"><span class="n">4</span><span>The provider acts on the real account and returns.</span></div>
+  <div class="step" data-s="4"><span class="n">5</span><span>The answer flows back to the seat.</span></div>
+</div>
+<div class="ui" id="legend"></div>
+<div class="ui" id="hint">drag to orbit &nbsp;·&nbsp; scroll to zoom<br/>a swappable brain, a permanent body</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const NODES = {
+  zone:    {label:"Inspired Zone", kind:"zone",    color:0x7c5cff, pos:[0,0,0],     r:2.4, sub:"the single seat"},
+  auth:    {label:"auth.",         kind:"auth",    color:0xff5c8a, pos:[0,8.5,0],   r:1.5, sub:"one secure door"},
+  tools:   {label:"tools.",        kind:"tools",   color:0x27e0c4, pos:[14,1.5,0],  r:1.9, sub:"provider gateway"},
+  device:  {label:"device.",       kind:"device",  color:0xffb547, pos:[-12,-2,9],  r:1.7, sub:"your machines"},
+  storage: {label:"storage.",      kind:"storage", color:0x4aa8ff, pos:[-12,-2,-9], r:1.7, sub:"R2 files"},
+};
+const PROVIDERS = [
+  {label:"google",     accounts:4, off:[7,5,5]},
+  {label:"github",     accounts:2, off:[8,-1,7]},
+  {label:"zoho",       accounts:3, off:[9,3,-5]},
+  {label:"vercel",     accounts:1, off:[8,-4,-6]},
+  {label:"cloudflare", accounts:1, off:[7,6,-3]},
+  {label:"notion",     accounts:1, off:[8,-5,3]},
+];
+const MACHINES = ["2024MacminiM4","2024MacBookProM4Pro","LenovoL13Yoga"];
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05070d, 0.012);
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 600);
+let camR=46, camTheta=0.7, camPhi=1.18;
+const renderer = new THREE.WebGLRenderer({canvas:document.getElementById('c'), antialias:true});
+renderer.setSize ? renderer.setSize(innerWidth,innerHeight) : renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+scene.add(new THREE.AmbientLight(0x404a66, 1.1));
+const p1=new THREE.PointLight(0x7c5cff,1.3,200); p1.position.set(0,0,0); scene.add(p1);
+const p2=new THREE.PointLight(0x27e0c4,0.8,200); p2.position.set(20,10,0); scene.add(p2);
+
+// starfield
+(function(){
+  const g=new THREE.BufferGeometry(); const n=1400; const a=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const r=120+Math.random()*220;const t=Math.random()*Math.PI*2;const ph=Math.acos(2*Math.random()-1);
+    a[i*3]=r*Math.sin(ph)*Math.cos(t);a[i*3+1]=r*Math.sin(ph)*Math.sin(t);a[i*3+2]=r*Math.cos(ph);}
+  g.setAttribute('position',new THREE.BufferAttribute(a,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x35406a,size:0.6})));
+})();
+
+function labelSprite(text, color, scale=4, sub){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=160; const x=cv.getContext('2d');
+  x.fillStyle='#'+color.toString(16).padStart(6,'0'); x.font='bold 60px -apple-system,Inter,sans-serif';
+  x.textAlign='center'; x.fillText(text,256,70);
+  if(sub){x.fillStyle='rgba(160,175,200,.85)'; x.font='28px -apple-system,Inter,sans-serif'; x.fillText(sub,256,118);}
+  const t=new THREE.CanvasTexture(cv); const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));
+  s.scale.set(scale, scale*0.31, 1); return s;
+}
+const objs={};
+function makeNode(key,d){
+  const grp=new THREE.Group(); grp.position.set(...d.pos);
+  const mat=new THREE.MeshStandardMaterial({color:d.color,emissive:d.color,emissiveIntensity:.55,roughness:.35,metalness:.4});
+  const geo = key==='zone' ? new THREE.IcosahedronGeometry(d.r,1) : new THREE.IcosahedronGeometry(d.r,0);
+  const mesh=new THREE.Mesh(geo,mat); grp.add(mesh);
+  const halo=new THREE.Mesh(new THREE.SphereGeometry(d.r*1.5,24,24), new THREE.MeshBasicMaterial({color:d.color,transparent:true,opacity:0.07}));
+  grp.add(halo);
+  const lab=labelSprite(d.label,d.color,d.r*2.7,d.sub); lab.position.set(0,d.r*1.9,0); grp.add(lab);
+  scene.add(grp); objs[key]={grp,mesh,d}; return grp;
+}
+Object.entries(NODES).forEach(([k,d])=>makeNode(k,d));
+
+// providers around tools
+const provObjs=[];
+PROVIDERS.forEach(p=>{
+  const base=NODES.tools.pos; const pos=[base[0]+p.off[0],base[1]+p.off[1],base[2]+p.off[2]];
+  const grp=new THREE.Group(); grp.position.set(...pos);
+  const m=new THREE.Mesh(new THREE.OctahedronGeometry(0.9,0), new THREE.MeshStandardMaterial({color:0x27e0c4,emissive:0x0fae98,emissiveIntensity:.6,roughness:.3,metalness:.5}));
+  grp.add(m);
+  const lab=labelSprite(p.label,0xbafff2,2.6,p.accounts>1?p.accounts+" accounts":"1 account"); lab.position.set(0,1.5,0); grp.add(lab);
+  scene.add(grp); provObjs.push({grp,m,pos}); curve(NODES.tools.pos,pos,0x1c5a52);
+});
+// machines around device
+MACHINES.forEach((name,i)=>{
+  const base=NODES.device.pos; const ang=i/MACHINES.length*Math.PI*2; const pos=[base[0]+Math.cos(ang)*4.2,base[1]-1.5+i*1.4,base[2]+Math.sin(ang)*4.2];
+  const grp=new THREE.Group(); grp.position.set(...pos);
+  grp.add(new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,1.1), new THREE.MeshStandardMaterial({color:0xffb547,emissive:0x7a4f10,emissiveIntensity:.5,roughness:.4,metalness:.4})));
+  const lab=labelSprite(name,0xffd693,3.4); lab.position.set(0,1.3,0); grp.add(lab); scene.add(grp);
+  curve(NODES.device.pos,pos,0x5e451a);
+});
+
+function curve(a,b,color,op=0.5){
+  const va=new THREE.Vector3(...a), vb=new THREE.Vector3(...b);
+  const mid=va.clone().add(vb).multiplyScalar(0.5); mid.y+=2.5;
+  const cv=new THREE.QuadraticBezierCurve3(va,mid,vb);
+  const g=new THREE.BufferGeometry().setFromPoints(cv.getPoints(40));
+  scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:op})));
+  return cv;
+}
+// backbone
+const paths={
+  zoneAuth: curve(NODES.zone.pos,NODES.auth.pos,0x3a2740,0.8),
+  authTools: curve(NODES.auth.pos,NODES.tools.pos,0x2a4a48,0.8),
+  zoneTools: curve(NODES.zone.pos,NODES.tools.pos,0x18403c,0.7),
+  zoneDevice: curve(NODES.zone.pos,NODES.device.pos,0x4a3a18,0.7),
+  zoneStorage: curve(NODES.zone.pos,NODES.storage.pos,0x1c3a54,0.7),
+};
+
+// flowing packet
+const packet=new THREE.Mesh(new THREE.SphereGeometry(0.45,16,16), new THREE.MeshBasicMaterial({color:0xffffff}));
+const pkHalo=new THREE.Mesh(new THREE.SphereGeometry(0.9,16,16), new THREE.MeshBasicMaterial({color:0x27e0c4,transparent:true,opacity:.3}));
+packet.add(pkHalo); scene.add(packet);
+const tgtProv=provObjs[1].pos; // github
+const legs=[
+  {c:paths.zoneAuth,rev:false,s:0},
+  {c:paths.authTools,rev:false,s:1},
+  {c:curve(NODES.tools.pos,tgtProv,0x27e0c4,0),rev:false,s:2},
+  {c:curve(NODES.tools.pos,tgtProv,0x27e0c4,0),rev:true,s:3},
+  {c:paths.authTools,rev:true,s:3},
+  {c:paths.zoneAuth,rev:true,s:4},
+];
+let leg=0, segT=0;
+const steps=[...document.querySelectorAll('#flow .step')];
+function setStep(s){steps.forEach(e=>e.classList.toggle('on', +e.dataset.s===s));}
+
+// legend
+const L=document.getElementById('legend');
+[["Inspired Zone","--zone"],["auth","--auth"],["tools","--tools"],["device","--device"],["storage","--storage"]].forEach(([t,v])=>{
+  const k=document.createElement('div'); k.className='k';
+  k.innerHTML='<span class="d" style="color:var('+v+');background:var('+v+')"></span>'+t; L.appendChild(k);
+});
+
+// interaction
+let drag=false,lx=0,ly=0;
+addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY});
+addEventListener('mouseup',()=>drag=false);
+addEventListener('mousemove',e=>{if(!drag)return;camTheta-=(e.clientX-lx)*0.005;camPhi=Math.max(0.25,Math.min(2.7,camPhi-(e.clientY-ly)*0.005));lx=e.clientX;ly=e.clientY});
+addEventListener('wheel',e=>{camR=Math.max(18,Math.min(110,camR+e.deltaY*0.05))},{passive:true});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+let t=0;
+function animate(){
+  requestAnimationFrame(animate); t+=0.016;
+  camTheta+=0.0009;
+  camera.position.set(camR*Math.sin(camPhi)*Math.sin(camTheta), camR*Math.cos(camPhi), camR*Math.sin(camPhi)*Math.cos(camTheta));
+  camera.lookAt(0,0,0);
+  Object.values(objs).forEach((o,i)=>{o.mesh.rotation.y+=0.004;o.mesh.rotation.x+=0.002;o.grp.position.y=o.d.pos[1]+Math.sin(t+i)*0.25;});
+  provObjs.forEach((o,i)=>{o.m.rotation.y+=0.02;o.m.rotation.x+=0.01;});
+  // packet
+  segT+=0.012; if(segT>=1){segT=0;leg=(leg+1)%legs.length;}
+  const L0=legs[leg]; const u=L0.rev?1-segT:segT; const pt=L0.c.getPoint(u); packet.position.copy(pt);
+  pkHalo.scale.setScalar(1+Math.sin(t*6)*0.2); setStep(L0.s);
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
