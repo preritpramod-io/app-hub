@@ -20,6 +20,18 @@
       "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india/$1"
     },
     {
+      "source": "/finance",
+      "destination": "https://app-finance-brown.vercel.app/finance"
+    },
+    {
+      "source": "/finance/",
+      "destination": "https://app-finance-brown.vercel.app/finance/"
+    },
+    {
+      "source": "/finance/(.*)",
+      "destination": "https://app-finance-brown.vercel.app/finance/$1"
+    },
+    {
       "source": "/zone",
       "destination": "/zone/index.html"
     },
