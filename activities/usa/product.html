@@ -35,13 +35,27 @@ input[type=range]{ flex:1; accent-color:var(--navy); height:22px; }
 .eq { margin-top:8px; color:var(--mute); font-size:10.5px; font-style:italic; }
 h4 { margin:2px 0 4px 0; font-size:12px; color:var(--navy); letter-spacing:0.4px; }
 hr { border:none; border-top:1px solid #e8ecf3; margin:8px 0; }
+.phead { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+.phead button { border:1px solid var(--navy); background:#fff; color:var(--navy); border-radius:12px; padding:2px 10px; font-size:11px; cursor:pointer; }
+#panel.min #pbody { display:none; }
+#zoom { position:fixed; left:10px; top:58px; z-index:8; display:flex; flex-direction:column; gap:8px; }
+#zoom button { width:40px; height:40px; border-radius:50%; border:1px solid var(--navy); background:rgba(255,255,255,0.95); color:var(--navy); font-size:20px; cursor:pointer; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 <div id="bar"><b>MSS AEROSHELL EXPLORER</b><span>THREE SECTORS, ONE TRUTH</span></div>
 <div id="stage"></div>
+<div id="zoom"><button id="zIn">+</button><button id="zOut">-</button></div>
 <div id="panel">
+  <div class="phead"><h4>CONTROLS</h4><button id="bMin">Hide</button></div>
+  <div id="pbody">
+  <h4>CONCEPT</h4>
+  <div class="btns" id="concepts">
+    <button data-c="ribgore" class="on">Rib and Gore</button><button data-c="petal">Rigid Petal</button>
+    <button data-c="hybrid">Hybrid</button><button data-c="four">Four Petal</button>
+  </div>
+  <hr>
   <h4>VIEW</h4>
   <div class="btns" id="views">
     <button data-v="iso" class="on">Iso</button><button data-v="side">Side</button>
@@ -62,11 +76,12 @@ hr { border:none; border-top:1px solid #e8ecf3; margin:8px 0; }
     <div class="chip" id="crest">On the authority crest near arctan sqrt 2</div>
   </div>
   <div class="eq">Panel law Cp = Cp,max (s.n)^2, force along the negative normal; per sector weight sin^2(theta). Net transverse arrow drawn 8x for visibility.</div>
+  </div>
 </div>
 <script>
 const D2R = Math.PI/180, Rh = 0.55, L = 2.6;
 const COL = { fab:0x7d92ae, rib:0x59636f, hub:0x1b2a4a, gold:0xc9a227, mot:0x2d333b, steel:0x46617f, navy:0x1b2a4a, gray:0x6b7480 };
-const P = { t0:50, d:[18,0,-10], forces:true, xray:false };
+const P = { t0:50, d:[18,0,-10], forces:true, xray:false, concept:'ribgore' };
 
 const stage = document.getElementById('stage');
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
@@ -80,7 +95,6 @@ const l2 = new THREE.DirectionalLight(0xdfe7f2, 0.22); l2.position.set(-4,2,-3);
 function resize(){ const w = stage.clientWidth, h = stage.clientHeight; cam.aspect = w/h; cam.updateProjectionMatrix(); ren.setSize(w,h); ren.setPixelRatio(Math.min(devicePixelRatio,2)); }
 addEventListener('resize', resize);
 
-// ---------- geometry helpers ----------
 function pt(phiDeg, t, th){ const p = phiDeg*D2R, r = Rh + t*L*Math.sin(th), y = -t*L*Math.cos(th);
   return new THREE.Vector3(r*Math.cos(p), y, r*Math.sin(p)); }
 function nrm(phiDeg, th){ const p = phiDeg*D2R; return new THREE.Vector3(Math.cos(th)*Math.cos(p), Math.sin(th), Math.cos(th)*Math.sin(p)); }
@@ -92,7 +106,7 @@ function ruled(g, phiA, phiB, thA, thB, color, opts){
   for(let i=0;i<nP;i++) for(let j=0;j<nT;j++){ const a=i*(nT+1)+j, b=a+nT+1; idx.push(a,b,a+1,b,b+1,a+1); }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3)); geo.setIndex(idx); geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side:THREE.DoubleSide, shininess:20,
+  const m = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side:THREE.DoubleSide, shininess:20, flatShading:!!opts.flat,
     transparent:opts.op!==undefined, opacity:opts.op===undefined?1:opts.op }));
   g.add(m); return m;
 }
@@ -116,7 +130,6 @@ function fatArrow(g, from, dirV, len, color, r){
   hd.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir); g.add(hd);
 }
 
-// ---------- static hub ----------
 const hubG = new THREE.Group(); scene.add(hubG);
 (function(){
   const m = (geo,c,y)=>{ const o = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:c,shininess:30})); o.position.y=y; hubG.add(o); };
@@ -125,38 +138,68 @@ const hubG = new THREE.Group(); scene.add(hubG);
   m(new THREE.SphereGeometry(0.16,24,16), 0x2a3c63, 0.88);
 })();
 
-// ---------- dynamic shell and arrows ----------
 const shellG = new THREE.Group(); scene.add(shellG);
 const arrG = new THREE.Group(); scene.add(arrG);
 
+function panelsFor(){
+  if(P.concept === 'four'){ const dd = [P.d[0], P.d[1], P.d[2], 0];
+    return dd.map((d,k) => ({ phi: 45 + k*90, th: (P.t0 + d)*D2R })); }
+  return P.d.map((d,k) => ({ phi: k*120, th: (P.t0 + d)*D2R }));
+}
+const PANEL = 0x8093ab;
+function hinge(c, t){
+  const h = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2*Rh*Math.sin(50*D2R), 12), new THREE.MeshPhongMaterial({ color: COL.mot }));
+  const mid = pt(c, 0, t); h.position.set(mid.x*0.98, 0.03, mid.z*0.98);
+  h.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(-Math.sin(c*D2R), 0, Math.cos(c*D2R)));
+  shellG.add(h);
+}
+function motorAt(e){
+  const mb = new THREE.Mesh(new THREE.BoxGeometry(0.19,0.14,0.14), new THREE.MeshPhongMaterial({color:COL.mot}));
+  const mp = pt(e,0,60*D2R); mp.y += 0.02; mb.position.copy(mp); mb.lookAt(0,mp.y,0); shellG.add(mb);
+}
 function build(){
   disposeGroup(shellG);
-  const th = P.d.map(d => (P.t0+d)*D2R);
-  for(let s=0;s<3;s++){
-    const c = s*120, t = th[s], tN = th[(s+1)%3];
-    ruled(shellG, c-54, c+54, t, t, COL.fab, { op: P.xray?0.32:undefined });
-    hemTube(shellG, c-54, c+54, t);
-    for(const e of [c-54, c+54]){
-      const off = nrm(e, t).multiplyScalar(-0.075);
-      cylBetween(shellG, pt(e,0,t).add(off), pt(e,1,t).add(off), 0.045, COL.rib);
-      const mb = new THREE.Mesh(new THREE.BoxGeometry(0.19,0.14,0.14), new THREE.MeshPhongMaterial({color:COL.mot}));
-      const mp = pt(e,0,60*D2R); mp.y += 0.02; mb.position.copy(mp); mb.lookAt(0,mp.y,0); shellG.add(mb);
+  const ps = panelsFor(), op = P.xray ? 0.32 : undefined;
+  if(P.concept === 'ribgore' || P.concept === 'hybrid'){
+    for(let s=0;s<3;s++){
+      const c = s*120, t = ps[s].th, tN = ps[(s+1)%3].th;
+      if(P.concept === 'ribgore'){ ruled(shellG, c-54, c+54, t, t, COL.fab, { op }); }
+      else {
+        ruled(shellG, c-36, c+36, t, t, PANEL, { op, flat:true });
+        ruled(shellG, c-54, c-36, t, t, COL.fab, { op, nP:10 });
+        ruled(shellG, c+36, c+54, t, t, COL.fab, { op, nP:10 });
+      }
+      hemTube(shellG, c-54, c+54, t);
+      for(const e of [c-54, c+54]){
+        const off = nrm(e, t).multiplyScalar(-0.075);
+        cylBetween(shellG, pt(e,0,t).add(off), pt(e,1,t).add(off), 0.045, COL.rib);
+        motorAt(e);
+      }
+      const depth = 0.22*(1 - Math.min(Math.abs(t-tN)/0.35, 0.7));
+      ruled(shellG, c+54, c+66, t, tN, COL.gold, { nP:12, fold:(p,sf,tf)=>{
+        const f = depth*tf*(1-Math.abs(2*sf-1)), r = Math.hypot(p.x,p.z)-f, ph = Math.atan2(p.z,p.x);
+        return new THREE.Vector3(r*Math.cos(ph), p.y, r*Math.sin(ph)); }});
     }
-    const depth = 0.22*(1 - Math.min(Math.abs(t-tN)/0.35, 0.7));
-    ruled(shellG, c+54, c+66, t, tN, COL.gold, { nP:12, fold:(p,sf,tf)=>{
-      const f = depth*tf*(1-Math.abs(2*sf-1)), r = Math.hypot(p.x,p.z)-f, ph = Math.atan2(p.z,p.x);
-      return new THREE.Vector3(r*Math.cos(ph), p.y, r*Math.sin(ph)); }});
+  } else if(P.concept === 'petal'){
+    for(let s=0;s<3;s++){ const c = s*120, t = ps[s].th;
+      ruled(shellG, c-53, c+53, t, t, PANEL, { op, flat:true });
+      hemTube(shellG, c-53, c+53, t); hinge(c, t); motorAt(c);
+    }
+  } else {
+    for(let s=0;s<4;s++){ const c = 45+s*90, t = ps[s].th;
+      ruled(shellG, c-29, c+29, t, t, PANEL, { op, flat:true });
+      hemTube(shellG, c-29, c+29, t); hinge(c, t); motorAt(c);
+    }
   }
-  buildArrows(th);
-  readouts(th);
+  buildArrows(ps); readouts(ps);
 }
-function buildArrows(th){
+function buildArrows(ps){
   disposeGroup(arrG);
   if(!P.forces) return;
   let net = new THREE.Vector3();
-  for(let s=0;s<3;s++){
-    const c = s*120, t = th[s], n = nrm(c, t), w = Math.pow(Math.sin(t),2);
-    const fdir = n.clone().multiplyScalar(-1), len = 1.9*w, cen = pt(c, 0.55, t);
+  for(const p of ps){
+    const n = nrm(p.phi, p.th), w = Math.pow(Math.sin(p.th),2);
+    const fdir = n.clone().multiplyScalar(-1), len = 1.9*w, cen = pt(p.phi, 0.55, p.th);
     fatArrow(arrG, cen.clone().add(n.clone().multiplyScalar(len+0.06)), fdir, len, COL.steel, 0.045);
     net.add(fdir.multiplyScalar(w));
   }
@@ -165,20 +208,19 @@ function buildArrows(th){
   fatArrow(arrG, new THREE.Vector3(0,1.15,0), axial.clone().add(trans.clone().multiplyScalar(8)), 2.1, COL.navy, 0.06);
   if(trans.length() > 1e-4) fatArrow(arrG, new THREE.Vector3(0.4,-2.35,0.4), trans.clone().setY(0), 1.15, COL.gold, 0.05);
 }
-function readouts(th){
-  const s3 = th.reduce((a,t)=>a+Math.pow(Math.sin(t),3), 0);
+function readouts(ps){
+  const s3 = ps.reduce((a,p)=>a+Math.pow(Math.sin(p.th),3), 0);
   const ref = 3*Math.pow(Math.sin(50*D2R),3);
   let Lx=0, Lz=0;
-  th.forEach((t,i)=>{ const w = Math.pow(Math.sin(t),2)*Math.cos(t), p = i*120*D2R; Lx -= w*Math.cos(p); Lz -= w*Math.sin(p); });
+  ps.forEach(p=>{ const w = Math.pow(Math.sin(p.th),2)*Math.cos(p.th), a = p.phi*D2R; Lx -= w*Math.cos(a); Lz -= w*Math.sin(a); });
   const Lmag = Math.hypot(Lx,Lz);
   document.getElementById('rB').textContent = (ref/s3).toFixed(2);
   document.getElementById('rL').textContent = (Lmag/s3).toFixed(3);
   document.getElementById('rA').textContent = Lmag>1e-4 ? Math.round(Math.atan2(Lz,Lx)/D2R)+' deg' : 'none';
-  const crest = th.some(t => Math.abs(t/D2R - 54.74) < 1.5);
+  const crest = ps.some(p => Math.abs(p.th/D2R - 54.74) < 1.5);
   document.getElementById('crest').style.display = crest ? 'block' : 'none';
 }
 
-// ---------- camera, single finger orbit with tilt clamp ----------
 const tgt = new THREE.Vector3(0,-0.9,0);
 let az = 47, el = 22, rad = 8.6;
 let goal = null;
@@ -198,7 +240,6 @@ ren.domElement.addEventListener('touchmove', ev => { if(ev.touches.length === 2)
   const d = Math.hypot(ev.touches[0].clientX-ev.touches[1].clientX, ev.touches[0].clientY-ev.touches[1].clientY);
   if(pinch) rad = Math.max(3, Math.min(16, rad*(pinch/d))); pinch = d; setCam(); } }, {passive:false});
 
-// ---------- UI wiring ----------
 document.querySelectorAll('#views [data-v]').forEach(b => b.onclick = () => {
   document.querySelectorAll('#views [data-v]').forEach(x => x.classList.remove('on')); b.classList.add('on');
   goal = Object.assign({}, PRESETS[b.dataset.v]); });
@@ -206,6 +247,13 @@ document.getElementById('bF').onclick = e => { P.forces = !P.forces; e.target.cl
 document.getElementById('bX').onclick = e => { P.xray = !P.xray; e.target.classList.toggle('on', P.xray); build(); };
 document.getElementById('bC').onclick = () => { const a = document.createElement('a');
   a.download = 'MSS Aeroshell Capture.png'; a.href = ren.domElement.toDataURL('image/png'); a.click(); };
+document.getElementById('bMin').onclick = e => { const p = document.getElementById('panel');
+  p.classList.toggle('min'); e.target.textContent = p.classList.contains('min') ? 'Show' : 'Hide'; };
+document.getElementById('zIn').onclick = () => { rad = Math.max(3, rad - 0.9); setCam(); };
+document.getElementById('zOut').onclick = () => { rad = Math.min(16, rad + 0.9); setCam(); };
+document.querySelectorAll('#concepts button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#concepts button').forEach(x => x.classList.remove('on')); b.classList.add('on');
+  P.concept = b.dataset.c; build(); });
 function slider(id, out, fn, signed){ const el = document.getElementById(id);
   el.addEventListener('input', () => { const v = parseFloat(el.value); fn(v);
     document.getElementById(out).textContent = (signed && v>=0 ? '+' : '') + v.toFixed(1); build(); }); }
@@ -214,7 +262,6 @@ slider('d0','d0v', v => P.d[0] = v, true);
 slider('d1','d1v', v => P.d[1] = v, true);
 slider('d2','d2v', v => P.d[2] = v, true);
 
-// ---------- loop ----------
 function loop(){
   requestAnimationFrame(loop);
   if(goal){ az += (goal.az-az)*0.12; el += (goal.el-el)*0.12; rad += (goal.r-rad)*0.12;
