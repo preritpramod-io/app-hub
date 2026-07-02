@@ -8,6 +8,14 @@
   ],
   "rewrites": [
     {
+      "source": "/activities/usa",
+      "destination": "/activities/usa/index.html"
+    },
+    {
+      "source": "/activities/usa/",
+      "destination": "/activities/usa/index.html"
+    },
+    {
       "source": "/activities/defence/india",
       "destination": "https://app-activities-defence-india.vercel.app/activities/defence/india"
     },
