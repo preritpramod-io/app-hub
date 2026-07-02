@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MSS Aeroshell Interactive Explorer</title>
+<style>
+:root { --navy:#1b2a4a; --gold:#c9a227; --ink:#2b2f36; --mute:#5a6472; --tint:#f4f6fa; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { margin:0; height:100%; overflow:hidden; background:#fff;
+  font-family:"Franklin Gothic Book","Franklin Gothic Medium","Segoe UI",Arial,sans-serif; }
+#bar { position:fixed; top:0; left:0; right:0; height:46px; background:var(--navy); color:#fff;
+  display:flex; align-items:center; gap:10px; padding:0 12px; z-index:10; }
+#bar b { font-size:14px; letter-spacing:0.5px; }
+#bar span { color:var(--gold); font-size:11px; letter-spacing:1.5px; }
+#stage { position:absolute; inset:46px 0 0 0; }
+canvas { display:block; touch-action:none; }
+#panel { position:fixed; z-index:9; background:rgba(255,255,255,0.96); border:1px solid #e3e8f0;
+  border-radius:12px; box-shadow:0 6px 22px rgba(20,30,55,0.12); padding:10px 12px; font-size:12px; color:var(--ink); }
+@media (min-width:820px){ #panel { top:60px; right:12px; width:270px; } }
+@media (max-width:819px){ #panel { left:8px; right:8px; bottom:8px; max-height:46vh; overflow:auto; } }
+.row { display:flex; align-items:center; gap:8px; margin:7px 0; }
+.row label { width:86px; color:var(--mute); }
+.row output { width:44px; text-align:right; font-weight:bold; color:var(--navy); }
+input[type=range]{ flex:1; accent-color:var(--navy); height:22px; }
+.btns { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.btns button { border:1px solid var(--navy); background:#fff; color:var(--navy); border-radius:14px;
+  padding:4px 10px; font-size:11.5px; cursor:pointer; }
+.btns button.on { background:var(--navy); color:#fff; }
+.btns button.gold { border-color:var(--gold); color:#8a6d10; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.chip { background:var(--tint); border-radius:8px; padding:5px 8px; font-size:11px; color:var(--ink); }
+.chip b { color:var(--navy); }
+#crest { display:none; background:#fdf6e0; border:1px solid var(--gold); }
+.eq { margin-top:8px; color:var(--mute); font-size:10.5px; font-style:italic; }
+h4 { margin:2px 0 4px 0; font-size:12px; color:var(--navy); letter-spacing:0.4px; }
+hr { border:none; border-top:1px solid #e8ecf3; margin:8px 0; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="bar"><b>MSS AEROSHELL EXPLORER</b><span>THREE SECTORS, ONE TRUTH</span></div>
+<div id="stage"></div>
+<div id="panel">
+  <h4>VIEW</h4>
+  <div class="btns" id="views">
+    <button data-v="iso" class="on">Iso</button><button data-v="side">Side</button>
+    <button data-v="top">Top</button><button data-v="pleat">Pleat</button>
+    <button id="bF" class="on">Forces</button><button id="bX">X ray</button>
+    <button id="bC" class="gold">Capture PNG</button>
+  </div>
+  <hr>
+  <h4>COMMAND</h4>
+  <div class="row"><label>Collective</label><input id="t0" type="range" min="38" max="68" step="0.5" value="50"><output id="t0v">50.0</output></div>
+  <div class="row"><label>Sector 1</label><input id="d0" type="range" min="-20" max="20" step="0.5" value="18"><output id="d0v">+18.0</output></div>
+  <div class="row"><label>Sector 2</label><input id="d1" type="range" min="-20" max="20" step="0.5" value="0"><output id="d1v">+0.0</output></div>
+  <div class="row"><label>Sector 3</label><input id="d2" type="range" min="-20" max="20" step="0.5" value="-10"><output id="d2v">-10.0</output></div>
+  <div class="chips">
+    <div class="chip">Beta factor <b id="rB">1.00</b></div>
+    <div class="chip">L over D <b id="rL">0.00</b></div>
+    <div class="chip">Lift azimuth <b id="rA">0</b></div>
+    <div class="chip" id="crest">On the authority crest near arctan sqrt 2</div>
+  </div>
+  <div class="eq">Panel law Cp = Cp,max (s.n)^2, force along the negative normal; per sector weight sin^2(theta). Net transverse arrow drawn 8x for visibility.</div>
+</div>
+<script>
+const D2R = Math.PI/180, Rh = 0.55, L = 2.6;
+const COL = { fab:0x7d92ae, rib:0x59636f, hub:0x1b2a4a, gold:0xc9a227, mot:0x2d333b, steel:0x46617f, navy:0x1b2a4a, gray:0x6b7480 };
+const P = { t0:50, d:[18,0,-10], forces:true, xray:false };
+
+const stage = document.getElementById('stage');
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
+const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+const ren = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+stage.appendChild(ren.domElement);
+scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+const l1 = new THREE.DirectionalLight(0xffffff, 0.62); l1.position.set(3,5,4); scene.add(l1);
+const l2 = new THREE.DirectionalLight(0xdfe7f2, 0.22); l2.position.set(-4,2,-3); scene.add(l2);
+
+function resize(){ const w = stage.clientWidth, h = stage.clientHeight; cam.aspect = w/h; cam.updateProjectionMatrix(); ren.setSize(w,h); ren.setPixelRatio(Math.min(devicePixelRatio,2)); }
+addEventListener('resize', resize);
+
+// ---------- geometry helpers ----------
+function pt(phiDeg, t, th){ const p = phiDeg*D2R, r = Rh + t*L*Math.sin(th), y = -t*L*Math.cos(th);
+  return new THREE.Vector3(r*Math.cos(p), y, r*Math.sin(p)); }
+function nrm(phiDeg, th){ const p = phiDeg*D2R; return new THREE.Vector3(Math.cos(th)*Math.cos(p), Math.sin(th), Math.cos(th)*Math.sin(p)); }
+function disposeGroup(g){ g.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); g.clear(); }
+function ruled(g, phiA, phiB, thA, thB, color, opts){
+  opts = opts || {}; const nP = opts.nP||36, nT = 10, pos = [], idx = [];
+  for(let i=0;i<=nP;i++){ const s=i/nP, phi=phiA+(phiB-phiA)*s, th=thA+(thB-thA)*s;
+    for(let j=0;j<=nT;j++){ let p = pt(phi, j/nT, th); if(opts.fold) p = opts.fold(p, s, j/nT); pos.push(p.x,p.y,p.z); } }
+  for(let i=0;i<nP;i++) for(let j=0;j<nT;j++){ const a=i*(nT+1)+j, b=a+nT+1; idx.push(a,b,a+1,b,b+1,a+1); }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3)); geo.setIndex(idx); geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side:THREE.DoubleSide, shininess:20,
+    transparent:opts.op!==undefined, opacity:opts.op===undefined?1:opts.op }));
+  g.add(m); return m;
+}
+function cylBetween(g, a, b, r, color){
+  const d = b.clone().sub(a), len = d.length();
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,12), new THREE.MeshPhongMaterial({ color, shininess:45 }));
+  c.position.copy(a.clone().add(b).multiplyScalar(0.5));
+  c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), d.normalize()); g.add(c);
+}
+function hemTube(g, phiA, phiB, th){
+  const n=22, pts=[]; for(let i=0;i<=n;i++) pts.push(pt(phiA+(phiB-phiA)*i/n, 1, th));
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 22, 0.028, 10), new THREE.MeshPhongMaterial({ color:COL.rib })));
+}
+function fatArrow(g, from, dirV, len, color, r){
+  r = r||0.05; const dir = dirV.clone().normalize(), sl = len*0.78;
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(r,r,sl,12), new THREE.MeshPhongMaterial({ color }));
+  sh.position.copy(from.clone().add(dir.clone().multiplyScalar(sl/2)));
+  sh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir); g.add(sh);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(r*2.5, len*0.22, 16), new THREE.MeshPhongMaterial({ color }));
+  hd.position.copy(from.clone().add(dir.clone().multiplyScalar(sl+len*0.11)));
+  hd.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir); g.add(hd);
+}
+
+// ---------- static hub ----------
+const hubG = new THREE.Group(); scene.add(hubG);
+(function(){
+  const m = (geo,c,y)=>{ const o = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:c,shininess:30})); o.position.y=y; hubG.add(o); };
+  m(new THREE.CylinderGeometry(Rh,Rh,0.46,48), COL.hub, 0.23);
+  m(new THREE.CylinderGeometry(0.16,Rh*0.9,0.42,48), COL.hub, 0.67);
+  m(new THREE.SphereGeometry(0.16,24,16), 0x2a3c63, 0.88);
+})();
+
+// ---------- dynamic shell and arrows ----------
+const shellG = new THREE.Group(); scene.add(shellG);
+const arrG = new THREE.Group(); scene.add(arrG);
+
+function build(){
+  disposeGroup(shellG);
+  const th = P.d.map(d => (P.t0+d)*D2R);
+  for(let s=0;s<3;s++){
+    const c = s*120, t = th[s], tN = th[(s+1)%3];
+    ruled(shellG, c-54, c+54, t, t, COL.fab, { op: P.xray?0.32:undefined });
+    hemTube(shellG, c-54, c+54, t);
+    for(const e of [c-54, c+54]){
+      const off = nrm(e, t).multiplyScalar(-0.075);
+      cylBetween(shellG, pt(e,0,t).add(off), pt(e,1,t).add(off), 0.045, COL.rib);
+      const mb = new THREE.Mesh(new THREE.BoxGeometry(0.19,0.14,0.14), new THREE.MeshPhongMaterial({color:COL.mot}));
+      const mp = pt(e,0,60*D2R); mp.y += 0.02; mb.position.copy(mp); mb.lookAt(0,mp.y,0); shellG.add(mb);
+    }
+    const depth = 0.22*(1 - Math.min(Math.abs(t-tN)/0.35, 0.7));
+    ruled(shellG, c+54, c+66, t, tN, COL.gold, { nP:12, fold:(p,sf,tf)=>{
+      const f = depth*tf*(1-Math.abs(2*sf-1)), r = Math.hypot(p.x,p.z)-f, ph = Math.atan2(p.z,p.x);
+      return new THREE.Vector3(r*Math.cos(ph), p.y, r*Math.sin(ph)); }});
+  }
+  buildArrows(th);
+  readouts(th);
+}
+function buildArrows(th){
+  disposeGroup(arrG);
+  if(!P.forces) return;
+  let net = new THREE.Vector3();
+  for(let s=0;s<3;s++){
+    const c = s*120, t = th[s], n = nrm(c, t), w = Math.pow(Math.sin(t),2);
+    const fdir = n.clone().multiplyScalar(-1), len = 1.9*w, cen = pt(c, 0.55, t);
+    fatArrow(arrG, cen.clone().add(n.clone().multiplyScalar(len+0.06)), fdir, len, COL.steel, 0.045);
+    net.add(fdir.multiplyScalar(w));
+  }
+  for(let k=0;k<3;k++) fatArrow(arrG, new THREE.Vector3(-2.5+0.5*k, 1.9, -1.0), new THREE.Vector3(0,-1,0), 0.9, COL.gray, 0.035);
+  const axial = new THREE.Vector3(0, net.y, 0), trans = net.clone().sub(axial);
+  fatArrow(arrG, new THREE.Vector3(0,1.15,0), axial.clone().add(trans.clone().multiplyScalar(8)), 2.1, COL.navy, 0.06);
+  if(trans.length() > 1e-4) fatArrow(arrG, new THREE.Vector3(0.4,-2.35,0.4), trans.clone().setY(0), 1.15, COL.gold, 0.05);
+}
+function readouts(th){
+  const s3 = th.reduce((a,t)=>a+Math.pow(Math.sin(t),3), 0);
+  const ref = 3*Math.pow(Math.sin(50*D2R),3);
+  let Lx=0, Lz=0;
+  th.forEach((t,i)=>{ const w = Math.pow(Math.sin(t),2)*Math.cos(t), p = i*120*D2R; Lx -= w*Math.cos(p); Lz -= w*Math.sin(p); });
+  const Lmag = Math.hypot(Lx,Lz);
+  document.getElementById('rB').textContent = (ref/s3).toFixed(2);
+  document.getElementById('rL').textContent = (Lmag/s3).toFixed(3);
+  document.getElementById('rA').textContent = Lmag>1e-4 ? Math.round(Math.atan2(Lz,Lx)/D2R)+' deg' : 'none';
+  const crest = th.some(t => Math.abs(t/D2R - 54.74) < 1.5);
+  document.getElementById('crest').style.display = crest ? 'block' : 'none';
+}
+
+// ---------- camera, single finger orbit with tilt clamp ----------
+const tgt = new THREE.Vector3(0,-0.9,0);
+let az = 47, el = 22, rad = 8.6;
+let goal = null;
+const PRESETS = { iso:{az:47,el:22,r:8.6,t:[0,-0.9,0]}, side:{az:8,el:3,r:9.0,t:[0,-1.0,0]},
+  top:{az:45,el:86,r:8.8,t:[0,-0.2,0]}, pleat:{az:58,el:16,r:4.4,t:[0.8,-0.9,1.3]} };
+function setCam(){ const a=az*D2R, e=el*D2R;
+  cam.position.set(tgt.x + rad*Math.cos(e)*Math.cos(a), tgt.y + rad*Math.sin(e), tgt.z + rad*Math.cos(e)*Math.sin(a));
+  cam.lookAt(tgt); }
+let drag = null, pinch = null;
+ren.domElement.addEventListener('pointerdown', ev => { drag = {x:ev.clientX, y:ev.clientY, id:ev.pointerId}; goal = null; });
+addEventListener('pointermove', ev => { if(!drag || ev.pointerId !== drag.id || pinch) return;
+  az += (ev.clientX - drag.x)*0.35; el += (ev.clientY - drag.y)*0.3;
+  el = Math.max(2, Math.min(87, el)); drag.x = ev.clientX; drag.y = ev.clientY; setCam(); });
+addEventListener('pointerup', () => { drag = null; pinch = null; });
+ren.domElement.addEventListener('wheel', ev => { ev.preventDefault(); rad = Math.max(3, Math.min(16, rad + ev.deltaY*0.004)); setCam(); }, {passive:false});
+ren.domElement.addEventListener('touchmove', ev => { if(ev.touches.length === 2){ ev.preventDefault();
+  const d = Math.hypot(ev.touches[0].clientX-ev.touches[1].clientX, ev.touches[0].clientY-ev.touches[1].clientY);
+  if(pinch) rad = Math.max(3, Math.min(16, rad*(pinch/d))); pinch = d; setCam(); } }, {passive:false});
+
+// ---------- UI wiring ----------
+document.querySelectorAll('#views [data-v]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#views [data-v]').forEach(x => x.classList.remove('on')); b.classList.add('on');
+  goal = Object.assign({}, PRESETS[b.dataset.v]); });
+document.getElementById('bF').onclick = e => { P.forces = !P.forces; e.target.classList.toggle('on', P.forces); build(); };
+document.getElementById('bX').onclick = e => { P.xray = !P.xray; e.target.classList.toggle('on', P.xray); build(); };
+document.getElementById('bC').onclick = () => { const a = document.createElement('a');
+  a.download = 'MSS Aeroshell Capture.png'; a.href = ren.domElement.toDataURL('image/png'); a.click(); };
+function slider(id, out, fn, signed){ const el = document.getElementById(id);
+  el.addEventListener('input', () => { const v = parseFloat(el.value); fn(v);
+    document.getElementById(out).textContent = (signed && v>=0 ? '+' : '') + v.toFixed(1); build(); }); }
+slider('t0','t0v', v => P.t0 = v, false);
+slider('d0','d0v', v => P.d[0] = v, true);
+slider('d1','d1v', v => P.d[1] = v, true);
+slider('d2','d2v', v => P.d[2] = v, true);
+
+// ---------- loop ----------
+function loop(){
+  requestAnimationFrame(loop);
+  if(goal){ az += (goal.az-az)*0.12; el += (goal.el-el)*0.12; rad += (goal.r-rad)*0.12;
+    tgt.lerp(new THREE.Vector3(...goal.t), 0.12);
+    if(Math.abs(goal.az-az)<0.2 && Math.abs(goal.r-rad)<0.05) goal = null; setCam(); }
+  ren.render(scene, cam);
+}
+resize(); setCam(); build(); loop();
+</script>
+</body>
+</html>
